@@ -20,6 +20,8 @@ font-family:Segoe UI;
 background:#f4f6f8;
 }
 
+/* HEADER */
+
 header{
 background:#0f9d58;
 color:white;
@@ -34,11 +36,15 @@ cursor:pointer;
 font-size:18px;
 }
 
+/* CONTAINER */
+
 .container{
 max-width:900px;
 margin:auto;
 padding:25px;
 }
+
+/* ORDER CARD */
 
 .order{
 background:white;
@@ -48,19 +54,32 @@ margin-bottom:20px;
 box-shadow:0 10px 25px rgba(0,0,0,0.08);
 }
 
+/* STATUS */
+
+.status{
+font-weight:bold;
+margin-bottom:8px;
+}
+
+/* DELIVERY TIME */
+
 .time{
 color:#0f9d58;
 font-weight:bold;
 margin-top:5px;
 }
 
+/* OTP */
+
 .otp{
-margin-top:10px;
 background:#fff3cd;
 padding:10px;
-border-radius:8px;
+border-radius:10px;
+margin-top:10px;
 font-weight:bold;
 }
+
+/* TRACK BAR */
 
 .track{
 height:8px;
@@ -114,9 +133,16 @@ return
 
 db.collection("orders")
 .where("userEmail","==",user.email.toLowerCase())
+.orderBy("created","desc")
 .onSnapshot(snapshot=>{
 
 let html=""
+
+if(snapshot.empty){
+
+html="<h3>No Orders Yet</h3>"
+
+}
 
 snapshot.forEach(doc=>{
 
@@ -128,16 +154,22 @@ if(o.status=="Packed") percent=40
 if(o.status=="Out for Delivery") percent=75
 if(o.status=="Delivered") percent=100
 
-let otpHTML=""
+let otpBox=""
 
 if(o.status=="Out for Delivery" && o.deliveryOTP){
 
-otpHTML=`
+otpBox=`
+
 <div class="otp">
+
 Delivery OTP: ${o.deliveryOTP}
+
 <br>
+
 Show this OTP to delivery boy
+
 </div>
+
 `
 
 }
@@ -146,19 +178,21 @@ html+=`
 
 <div class="order">
 
-<b>Status:</b> ${o.status}
+<div class="status">
+Status: ${o.status}
+</div>
 
-<br>
-
-<b>Total:</b> ₹${o.total}
+<div>
+Total: ₹${o.total}
+</div>
 
 <div class="time">
 
-Estimated Delivery: ${o.deliveryTime || "Not set"}
+Estimated Delivery: ${o.deliveryTime || "Not Set"}
 
 </div>
 
-${otpHTML}
+${otpBox}
 
 <div class="track">
 
