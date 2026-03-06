@@ -54,6 +54,14 @@ font-weight:bold;
 margin-top:5px;
 }
 
+.otp{
+margin-top:10px;
+background:#fff3cd;
+padding:10px;
+border-radius:8px;
+font-weight:bold;
+}
+
 .track{
 height:8px;
 background:#ddd;
@@ -66,7 +74,6 @@ position:relative;
 height:100%;
 background:#0f9d58;
 border-radius:10px;
-width:0%;
 }
 
 .truck{
@@ -121,6 +128,20 @@ if(o.status=="Packed") percent=40
 if(o.status=="Out for Delivery") percent=75
 if(o.status=="Delivered") percent=100
 
+let otpHTML=""
+
+if(o.status=="Out for Delivery" && o.deliveryOTP){
+
+otpHTML=`
+<div class="otp">
+Delivery OTP: ${o.deliveryOTP}
+<br>
+Show this OTP to delivery boy
+</div>
+`
+
+}
+
 html+=`
 
 <div class="order">
@@ -136,6 +157,8 @@ html+=`
 Estimated Delivery: ${o.deliveryTime || "Not set"}
 
 </div>
+
+${otpHTML}
 
 <div class="track">
 
