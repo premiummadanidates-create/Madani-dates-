@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Order Success</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+  --emerald: #0f9d58;
+  --dark: #064e3b;
+  --white: #ffffff;
+}
+
+body {
+  background: #f4f6f8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* CARD */
+.success-card{
+  background:white;
+  padding:50px 30px;
+  border-radius:25px;
+  text-align:center;
+  box-shadow:0 25px 60px rgba(0,0,0,0.08);
+  width:90%;
+  max-width:420px;
+}
+
+/* CHECK CONTAINER */
+.success-checkmark {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 30px;
+}
+
+/* SVG */
+.checkmark {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 3;
+  stroke: var(--white);
+  stroke-miterlimit: 10;
+  box-shadow: inset 0px 0px 0px var(--emerald);
+  animation: 
+      fill 0.8s ease-in-out 0.6s forwards, 
+      scale 0.6s ease-in-out 1.4s both;
+}
+
+.checkmark__circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 3;
+  stroke-miterlimit: 10;
+  stroke: var(--emerald);
+  fill: none;
+  animation: stroke 1.2s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark__check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) 1.1s forwards;
+}
+
+/* TEXT */
+h2{
+  color:var(--dark);
+  margin-bottom:10px;
+  font-size:24px;
+}
+
+p{
+  color:#555;
+  font-size:15px;
+  margin-bottom:30px;
+}
+
+/* BUTTON */
+.order-btn{
+  background:var(--emerald);
+  color:white;
+  border:none;
+  padding:14px;
+  width:100%;
+  border-radius:15px;
+  font-size:15px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.order-btn:hover{
+  background:var(--dark);
+}
+
+/* ANIMATIONS */
+@keyframes stroke {
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes scale {
+  0%,100% { transform:none; }
+  50% { transform:scale(1.08); }
+}
+
+@keyframes fill {
+  100% { box-shadow: inset 0px 0px 0px 60px var(--emerald); }
+}
+
+/* MOBILE */
+@media(max-width:480px){
+  .success-card{
+    padding:40px 20px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="success-card">
+
+  <div class="success-checkmark">
+    <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+      <circle class="checkmark__circle" cx="26" cy="26" r="25"/>
+      <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+    </svg>
+  </div>
+
+  <h2>Order Placed Successfully 🎉</h2>
+  <p>Your order has been confirmed.<br>
+  You can track it in My Orders.</p>
+
+  <button class="order-btn" onclick="goOrders()">Go To My Orders</button>
+
+</div>
+
+<script>
+function goOrders(){
+  window.location="orders.html";
+}
+</script>
+
+</body>
+</html> 

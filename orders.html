@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>My Orders</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script src="firebase.js"></script>
+
+<style>
+
+body{
+margin:0;
+font-family:Segoe UI;
+background:#f4f6f8;
+}
+
+header{
+background:#0f9d58;
+color:white;
+padding:20px;
+display:flex;
+align-items:center;
+}
+
+.back{
+margin-right:15px;
+cursor:pointer;
+font-size:18px;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+padding:25px;
+}
+
+.order{
+background:white;
+padding:20px;
+border-radius:20px;
+margin-bottom:20px;
+box-shadow:0 10px 25px rgba(0,0,0,0.08);
+}
+
+.time{
+color:#0f9d58;
+font-weight:bold;
+margin-top:5px;
+}
+
+.track{
+height:8px;
+background:#ddd;
+border-radius:10px;
+margin-top:15px;
+position:relative;
+}
+
+.progress{
+height:100%;
+background:#0f9d58;
+border-radius:10px;
+width:0%;
+}
+
+.truck{
+position:absolute;
+top:-18px;
+font-size:24px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="back" onclick="window.location='home.html'">
+⬅ Back
+</div>
+
+<div>My Orders</div>
+
+</header>
+
+<div class="container" id="orders"></div>
+
+<script>
+
+const auth = firebase.auth()
+const db = firebase.firestore()
+
+auth.onAuthStateChanged(user=>{
+
+if(!user){
+window.location="index.html"
+return
+}
+
+db.collection("orders")
+.where("userEmail","==",user.email.toLowerCase())
+.onSnapshot(snapshot=>{
+
+let html=""
+
+snapshot.forEach(doc=>{
+
+let o=doc.data()
+
+let percent=10
+
+if(o.status=="Packed") percent=40
+if(o.status=="Out for Delivery") percent=75
+if(o.status=="Delivered") percent=100
+
+html+=`
+
+<div class="order">
+
+<b>Status:</b> ${o.status}
+
+<br>
+
+<b>Total:</b> ₹${o.total}
+
+<div class="time">
+
+Estimated Delivery: ${o.deliveryTime || "Not set"}
+
+</div>
+
+<div class="track">
+
+<div class="progress" style="width:${percent}%"></div>
+
+<div class="truck" style="left:${percent}%">
+🚚
+</div>
+
+</div>
+
+</div>
+
+`
+
+})
+
+document.getElementById("orders").innerHTML=html
+
+})
+
+})
+
+</script>
+
+</body>
+</html>

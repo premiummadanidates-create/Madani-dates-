@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Cart</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+
+<style>
+body{margin:0;font-family:Segoe UI;background:#f4f6f8}
+header{background:#0f9d58;color:white;padding:18px;font-size:20px}
+.container{max-width:900px;margin:auto;padding:30px}
+
+.card{
+background:white;
+padding:20px;
+margin-bottom:15px;
+border-radius:20px;
+box-shadow:0 10px 25px rgba(0,0,0,0.08);
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.qty-btn{
+background:black;
+color:white;
+border:none;
+width:30px;
+height:30px;
+border-radius:50%;
+cursor:pointer;
+}
+
+.remove{
+color:#d32f2f;
+cursor:pointer;
+font-size:14px;
+}
+
+.summary{
+background:white;
+padding:20px;
+border-radius:20px;
+box-shadow:0 10px 25px rgba(0,0,0,0.08);
+margin-top:20px;
+}
+
+input,textarea{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:10px;
+border:1px solid #ddd;
+}
+
+.place{
+background:black;
+color:white;
+padding:14px;
+border-radius:15px;
+text-align:center;
+margin-top:20px;
+cursor:pointer;
+}
+
+.modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.6);
+display:none;
+justify-content:center;
+align-items:center;
+}
+
+.modal-box{
+background:white;
+padding:30px;
+border-radius:20px;
+width:320px;
+text-align:center;
+}
+
+.modal-btn{
+margin:10px;
+padding:10px 20px;
+border:none;
+border-radius:15px;
+cursor:pointer;
+}
+
+.yes{background:#0f9d58;color:white}
+.no{background:#ddd}
+
+.pay-btn{
+display:block;
+width:100%;
+margin-top:10px;
+padding:12px;
+border:none;
+border-radius:12px;
+cursor:pointer;
+}
+
+.cod{background:#4caf50;color:white}
+.online{background:#2196f3;color:white}
+
+</style>
+</head>
+
+<body>
+
+<header>Your Cart</header>
+
+<div class="container">
+
+<div id="cartBox"></div>
+
+<div class="summary">
+<h3>Total: ₹<span id="total">0</span></h3>
+
+<input type="text" id="name" placeholder="Full Name">
+<input type="text" id="phone" placeholder="Phone Number">
+<textarea id="address" rows="3" placeholder="Full Address"></textarea>
+
+<div class="place" onclick="openConfirm()">Place Order</div>
+
+</div>
+</div>
+
+<!-- CONFIRM MODAL -->
+
+<div class="modal" id="confirmModal">
+<div class="modal-box">
+
+<h3>Confirm Purchase</h3>
+<p>Are you sure you want to buy these items?</p>
+
+<button class="modal-btn yes" onclick="openPayment()">Yes</button>
+<button class="modal-btn no" onclick="closeConfirm()">No</button>
+
+</div>
+</div>
+
+<!-- PAYMENT MODAL -->
+
+<div class="modal" id="paymentModal">
+<div class="modal-box">
+
+<h3>Select Payment</h3>
+
+<button class="pay-btn cod" onclick="placeOrder('COD')">
+Cash On Delivery
+</button>
+
+<button class="pay-btn online" onclick="placeOrder('Online payment on delivery')">
+Online Payment on delivery
+</button>
+
+</div>
+</div>
+
+<script>
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let total = 0;
+
+auth.onAuthStateChanged(user=>{
+if(!user) window.location="index.html";
+});
+
+/* SAVE CART */
+
+function saveCart(){
+localStorage.setItem("cart",JSON.stringify(cart));
+}
+
+/* RENDER CART */
+
+function renderCart(){
+
+cart = JSON.parse(localStorage.getItem("cart")) || [];
+total = 0;
+
+const box=document.getElementById("cartBox");
+box.innerHTML="";
+
+if(cart.length===0){
+box.innerHTML="<p>Cart is empty</p>";
+document.getElementById("total").innerText=0;
+return;
+}
+
+cart.forEach((item,i)=>{
+
+total += item.price * item.qty;
+
+box.innerHTML += `
+
+<div class="card">
+
+<div class="row">
+<strong>${item.name}</strong>
+₹${item.price * item.qty}
+</div>
+
+<div class="row" style="margin-top:10px">
+
+<div>
+
+<button class="qty-btn" onclick="changeQty(${i},-1)">-</button>
+
+${item.qty}
+
+<button class="qty-btn" onclick="changeQty(${i},1)">+</button>
+
+</div>
+
+<div class="remove" onclick="removeItem(${i})">Remove</div>
+
+</div>
+
+</div>
+
+`
+
+});
+
+document.getElementById("total").innerText = total;
+
+}
+
+/* CHANGE QTY */
+
+function changeQty(i,v){
+
+cart[i].qty += v;
+
+if(cart[i].qty <= 1) cart[i].qty = 1;
+
+saveCart();
+
+renderCart();
+
+}
+
+/* REMOVE ITEM */
+
+function removeItem(i){
+
+cart.splice(i,1);
+
+saveCart();
+
+renderCart();
+
+}
+
+/* ORDER MODALS */
+
+function openConfirm(){
+
+if(cart.length===0) return;
+
+let name=document.getElementById("name").value.trim();
+let phone=document.getElementById("phone").value.trim();
+let address=document.getElementById("address").value.trim();
+
+if(!name||!phone||!address){
+alert("Fill all details");
+return;
+}
+
+document.getElementById("confirmModal").style.display="flex";
+
+}
+
+function closeConfirm(){
+document.getElementById("confirmModal").style.display="none";
+}
+
+function openPayment(){
+
+document.getElementById("confirmModal").style.display="none";
+document.getElementById("paymentModal").style.display="flex";
+
+}
+
+/* PLACE ORDER */
+
+function placeOrder(method){
+
+const user=auth.currentUser;
+
+let name=document.getElementById("name").value.trim();
+let phone=document.getElementById("phone").value.trim();
+let address=document.getElementById("address").value.trim();
+
+db.collection("orders").add({
+
+items:cart,
+total:total,
+payment:method,
+userEmail:user.email.toLowerCase(),
+status:"Pending",
+customer:{name,phone,address},
+created:firebase.firestore.FieldValue.serverTimestamp()
+
+}).then(()=>{
+
+localStorage.removeItem("cart");
+
+window.location="success.html";
+
+})
+
+}
+
+renderCart();
+
+</script>
+
+</body>
+</html>
