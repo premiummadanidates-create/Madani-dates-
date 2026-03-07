@@ -49,13 +49,19 @@ justify-content:space-between;
 align-items:center;
 }
 
-.qty-btn{
+.qty{
+display:flex;
+gap:10px;
+align-items:center;
+}
+
+.qty button{
+width:30px;
+height:30px;
+border:none;
+border-radius:50%;
 background:black;
 color:white;
-border:none;
-width:32px;
-height:32px;
-border-radius:50%;
 cursor:pointer;
 }
 
@@ -74,7 +80,7 @@ margin-top:20px;
 
 input,textarea{
 width:100%;
-padding:12px;
+padding:10px;
 margin-top:10px;
 border-radius:10px;
 border:1px solid #ddd;
@@ -86,25 +92,36 @@ border:none;
 border-radius:10px;
 margin-top:10px;
 cursor:pointer;
-}
-
-.send{
-background:#2196f3;
-color:white;
 width:100%;
 }
 
-.verify{
-background:#4caf50;
-color:white;
-width:100%;
+.send{background:#2196f3;color:white}
+.verify{background:#4caf50;color:white}
+.place{background:black;color:white}
+
+.modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.6);
+display:none;
+justify-content:center;
+align-items:center;
 }
 
-.place{
-background:black;
-color:white;
-width:100%;
+.modal-box{
+background:white;
+padding:30px;
+border-radius:20px;
+width:320px;
+text-align:center;
 }
+
+.pay-btn{
+margin-top:10px;
+}
+
+.cod{background:#4caf50;color:white}
+.online{background:#2196f3;color:white}
 
 </style>
 </head>
@@ -133,11 +150,39 @@ width:100%;
 
 <button class="verify" onclick="verifyOTP()">Verify OTP</button>
 
-<button class="place" onclick="placeOrder()">Place Order</button>
+<button class="place" onclick="openConfirm()">Place Order</button>
 
 </div>
 
 </div>
+
+
+<div class="modal" id="confirmModal">
+<div class="modal-box">
+<h3>Confirm Order</h3>
+<p>Are you sure you want to place this order?</p>
+<button onclick="openPayment()">Yes</button>
+<button onclick="closeConfirm()">Cancel</button>
+</div>
+</div>
+
+
+<div class="modal" id="paymentModal">
+<div class="modal-box">
+
+<h3>Select Payment Method</h3>
+
+<button class="pay-btn cod" onclick="placeOrder('COD')">
+Cash On Delivery
+</button>
+
+<button class="pay-btn online" onclick="placeOrder('Online on delivery')">
+Online on delivery
+</button>
+
+</div>
+</div>
+
 
 <script>
 
@@ -152,13 +197,13 @@ let otp=""
 let verified=false
 let user=null
 
-/* AUTH */
-
 auth.onAuthStateChanged(u=>{
 
 if(!u){
+
 window.location="login.html"
 return
+
 }
 
 user=u
@@ -168,8 +213,6 @@ cart=JSON.parse(localStorage.getItem("cart_"+user.email))||[]
 renderCart()
 
 })
-
-/* CART */
 
 function renderCart(){
 
@@ -182,6 +225,7 @@ total=0
 if(cart.length==0){
 
 box.innerHTML="<p>Cart Empty</p>"
+document.getElementById("total").innerText=0
 return
 
 }
@@ -204,13 +248,13 @@ box.innerHTML+=`
 
 <div class="row">
 
-<div>
+<div class="qty">
 
-<button class="qty-btn" onclick="changeQty(${i},-1)">-</button>
+<button onclick="changeQty(${i},-1)">-</button>
 
 ${item.qty}
 
-<button class="qty-btn" onclick="changeQty(${i},1)">+</button>
+<button onclick="changeQty(${i},1)">+</button>
 
 </div>
 
@@ -228,8 +272,6 @@ document.getElementById("total").innerText=total
 
 }
 
-/* QTY */
-
 function changeQty(i,v){
 
 cart[i].qty+=v
@@ -240,8 +282,6 @@ saveCart()
 renderCart()
 
 }
-
-/* REMOVE */
 
 function removeItem(i){
 
@@ -258,12 +298,10 @@ localStorage.setItem("cart_"+user.email,JSON.stringify(cart))
 
 }
 
-/* OTP */
-
 function sendOTP(){
 
-if(!user){
-alert("Login first")
+if(cart.length==0){
+alert("Cart Empty")
 return
 }
 
@@ -278,15 +316,9 @@ otp:otp
 
 alert("OTP sent to your email")
 
-}).catch(err=>{
-
-alert("OTP failed: "+JSON.stringify(err))
-
 })
 
 }
-
-/* VERIFY */
 
 function verifyOTP(){
 
@@ -305,9 +337,7 @@ alert("Wrong OTP")
 
 }
 
-/* PLACE ORDER */
-
-function placeOrder(){
+function openConfirm(){
 
 if(!verified){
 
@@ -315,6 +345,25 @@ alert("Verify OTP first")
 return
 
 }
+
+document.getElementById("confirmModal").style.display="flex"
+
+}
+
+function closeConfirm(){
+
+document.getElementById("confirmModal").style.display="none"
+
+}
+
+function openPayment(){
+
+document.getElementById("confirmModal").style.display="none"
+document.getElementById("paymentModal").style.display="flex"
+
+}
+
+function placeOrder(method){
 
 let name=document.getElementById("name").value
 let phone=document.getElementById("phone").value
@@ -327,12 +376,15 @@ return
 
 }
 
+let orderID="MD"+Date.now()
+
 db.collection("orders").add({
 
+orderID:orderID,
 items:cart,
 total:total,
+payment:method,
 status:"Pending",
-payment:"COD",
 userEmail:user.email,
 
 customer:{
@@ -347,7 +399,7 @@ created:firebase.firestore.FieldValue.serverTimestamp()
 
 localStorage.removeItem("cart_"+user.email)
 
-alert("Order placed")
+alert("Order placed successfully")
 
 window.location="success.html"
 
