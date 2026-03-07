@@ -2,6 +2,8 @@
 <html>
 <head>
 
+<meta charset="UTF-8">
+<title>Your Cart</title>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -9,13 +11,22 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script src="firebase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <style>
 
 body{
+margin:0;
 font-family:Segoe UI;
 background:#f4f6f8;
-margin:0;
+}
+
+header{
+background:#0f9d58;
+color:white;
+padding:18px;
+font-size:20px;
+text-align:center;
 }
 
 .container{
@@ -26,16 +37,63 @@ padding:20px;
 
 .card{
 background:white;
-padding:15px;
+padding:20px;
+border-radius:15px;
+margin-bottom:15px;
+box-shadow:0 5px 20px rgba(0,0,0,0.08);
+}
+
+.summary{
+background:white;
+padding:20px;
+border-radius:15px;
+box-shadow:0 5px 20px rgba(0,0,0,0.08);
+margin-top:20px;
+}
+
+input,textarea{
+width:100%;
+padding:12px;
+margin-top:10px;
 border-radius:10px;
-margin-bottom:10px;
+border:1px solid #ddd;
 }
 
 button{
-padding:8px 12px;
+width:100%;
+padding:14px;
+margin-top:10px;
 border:none;
-border-radius:6px;
+border-radius:10px;
+font-weight:600;
 cursor:pointer;
+}
+
+.send{background:#2196f3;color:white}
+.verify{background:#4caf50;color:white}
+.place{background:black;color:white}
+
+.modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.6);
+display:none;
+justify-content:center;
+align-items:center;
+}
+
+.modal-box{
+background:white;
+padding:25px;
+border-radius:15px;
+width:320px;
+text-align:center;
+}
+
+.pay-btn{
+background:#0f9d58;
+color:white;
+margin-top:10px;
 }
 
 </style>
@@ -44,42 +102,96 @@ cursor:pointer;
 
 <body>
 
-<div class="container">
+<header>Your Cart</header>
 
-<h2>Your Cart</h2>
+<div class="container">
 
 <div id="cartBox"></div>
 
-<button onclick="placeOrder()">
+<div class="summary">
+
+<h3>Total ₹<span id="total">0</span></h3>
+
+<input id="email" placeholder="Email">
+<input id="name" placeholder="Full Name">
+<input id="phone" placeholder="Phone">
+<textarea id="address" placeholder="Address"></textarea>
+
+<button class="send" onclick="sendOTP()">
+Send OTP
+</button>
+
+<input id="otpInput" placeholder="Enter OTP">
+
+<button class="verify" onclick="verifyOTP()">
+Verify OTP
+</button>
+
+<button class="place" onclick="openConfirm()">
 Place Order
 </button>
 
 </div>
 
+</div>
+
+<!-- CONFIRM -->
+
+<div class="modal" id="confirmModal">
+
+<div class="modal-box">
+
+<h3>Confirm Order</h3>
+
+<button onclick="openPayment()">
+Confirm
+</button>
+
+<button onclick="closeConfirm()">
+Cancel
+</button>
+
+</div>
+
+</div>
+
+<!-- PAYMENT -->
+
+<div class="modal" id="paymentModal">
+
+<div class="modal-box">
+
+<h3>Select Payment</h3>
+
+<button class="pay-btn"
+onclick="placeOrder('COD')">
+
+Cash On Delivery
+
+</button>
+
+<button class="pay-btn"
+onclick="placeOrder('Online payment on delivery')">
+
+Online Payment
+
+</button>
+
+</div>
+
+</div>
+
 <script>
+
+emailjs.init("4zPe-PgOyx0M15xLm")
 
 const auth=firebase.auth()
 const db=firebase.firestore()
 
-let userEmail=""
-let cart=[]
-
-auth.onAuthStateChanged(user=>{
-
-if(!user){
-
-window.location="login.html"
-return
-
-}
-
-userEmail=user.email
-
-cart=JSON.parse(localStorage.getItem("cart_"+userEmail))||[]
-
-renderCart()
-
-})
+let cart=JSON.parse(localStorage.getItem("cart"))||[]
+let total=0
+let otp=""
+let verified=false
 
 function renderCart(){
 
@@ -87,7 +199,9 @@ let box=document.getElementById("cartBox")
 
 box.innerHTML=""
 
-cart.forEach((item,i)=>{
+cart.forEach(item=>{
+
+total+=item.price*item.qty
 
 box.innerHTML+=`
 
@@ -95,9 +209,9 @@ box.innerHTML+=`
 
 ${item.name}
 
-₹${item.price}
+<br>
 
-Qty ${item.qty}
+₹${item.price} x ${item.qty}
 
 </div>
 
@@ -105,27 +219,93 @@ Qty ${item.qty}
 
 })
 
+document.getElementById("total").innerText=total
+
 }
 
-function placeOrder(){
+renderCart()
+
+function sendOTP(){
+
+let email=document.getElementById("email").value
+
+otp=Math.floor(100000+Math.random()*900000)
+
+emailjs.send("madani_dates","template_w9iemq6",{
+
+otp:otp,
+to_email:email
+
+}).then(()=>{
+
+alert("OTP sent")
+
+})
+
+}
+
+function verifyOTP(){
+
+let userOTP=document.getElementById("otpInput").value
+
+if(userOTP==otp){
+
+verified=true
+alert("OTP verified")
+
+}else{
+
+alert("Wrong OTP")
+
+}
+
+}
+
+function openConfirm(){
+
+if(!verified){
+
+alert("Verify OTP first")
+return
+
+}
+
+document.getElementById("confirmModal").style.display="flex"
+
+}
+
+function closeConfirm(){
+
+document.getElementById("confirmModal").style.display="none"
+
+}
+
+function openPayment(){
+
+document.getElementById("confirmModal").style.display="none"
+
+document.getElementById("paymentModal").style.display="flex"
+
+}
+
+function placeOrder(method){
+
+let user=auth.currentUser
 
 db.collection("orders").add({
 
 items:cart,
-
-userEmail:userEmail,
-
+total:total,
+payment:method,
 status:"Pending",
-
+userEmail:user.email,
 created:new Date()
 
 }).then(()=>{
 
-localStorage.removeItem("cart_"+userEmail)
+localStorage.removeItem("cart")
 
-alert("Order placed")
-
-window.location="myorders.html"
+window.location="success.html"
 
 })
 
