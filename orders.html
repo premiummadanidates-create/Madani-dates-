@@ -48,7 +48,7 @@ margin:auto;
 padding:25px;
 }
 
-/* CARD */
+/* ORDER CARD */
 
 .order{
 background:white;
@@ -56,13 +56,18 @@ padding:22px;
 border-radius:22px;
 margin-bottom:20px;
 box-shadow:0 12px 30px rgba(0,0,0,0.08);
+transition:.3s;
+}
+
+.order:hover{
+transform:translateY(-4px);
 }
 
 /* STATUS */
 
 .status{
 font-weight:bold;
-margin-bottom:6px;
+margin-bottom:5px;
 }
 
 /* DELIVERY TIME */
@@ -73,7 +78,7 @@ font-weight:bold;
 margin-top:6px;
 }
 
-/* OTP */
+/* OTP BOX */
 
 .otp{
 background:#fff3cd;
@@ -91,6 +96,7 @@ background:#ddd;
 border-radius:10px;
 margin-top:15px;
 position:relative;
+overflow:hidden;
 }
 
 .progress{
@@ -106,20 +112,22 @@ top:-18px;
 font-size:22px;
 }
 
-/* STATES */
+/* EMPTY */
+
+.empty{
+text-align:center;
+color:#666;
+margin-top:50px;
+font-size:18px;
+}
+
+/* LOADING */
 
 .loading{
 text-align:center;
 margin-top:50px;
 font-size:18px;
 color:#777;
-}
-
-.empty{
-text-align:center;
-margin-top:50px;
-color:#666;
-font-size:18px;
 }
 
 </style>
@@ -130,6 +138,10 @@ font-size:18px;
 
 <header>
 
+<div class="back" onclick="window.location='index.html'">
+⬅
+</div>
+
 My Orders
 
 </header>
@@ -137,7 +149,7 @@ My Orders
 <div class="container">
 
 <div id="orders" class="loading">
-Checking login...
+Loading Orders...
 </div>
 
 </div>
@@ -147,43 +159,40 @@ Checking login...
 const auth = firebase.auth()
 const db = firebase.firestore()
 
-const box=document.getElementById("orders")
-
-/* AUTH CHECK */
+/* LOGIN CHECK */
 
 auth.onAuthStateChanged(user=>{
 
 if(!user){
 
-box.innerHTML="Redirecting to login..."
-
-setTimeout(()=>{
 window.location="login.html"
-},800)
 
 return
 
 }
 
-/* LOAD ORDERS */
-
-loadOrders(user.email.toLowerCase())
+loadOrders(user)
 
 })
 
-function loadOrders(email){
+/* LOAD ORDERS */
 
-box.innerHTML="Loading orders..."
+function loadOrders(user){
 
 db.collection("orders")
-.where("userEmail","==",email)
+
+.where("userEmail","==",user.email.toLowerCase())
+
 .orderBy("created","desc")
-.get()
-.then(snapshot=>{
+
+.onSnapshot(snapshot=>{
+
+const box=document.getElementById("orders")
 
 if(snapshot.empty){
 
 box.innerHTML='<div class="empty">No Orders Yet</div>'
+
 return
 
 }
@@ -200,11 +209,11 @@ if(o.status==="Packed") percent=40
 if(o.status==="Out for Delivery") percent=75
 if(o.status==="Delivered") percent=100
 
-let otp=""
+let otpBox=""
 
 if(o.status==="Out for Delivery" && o.deliveryOTP){
 
-otp=`
+otpBox=`
 
 <div class="otp">
 
@@ -242,7 +251,7 @@ Estimated Delivery: ${o.deliveryTime || "Not set"}
 
 </div>
 
-${otp}
+${otpBox}
 
 <div class="track">
 
