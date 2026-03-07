@@ -11,17 +11,42 @@
 <script src="firebase.js"></script>
 
 <style>
-body{margin:0;font-family:Segoe UI;background:#f4f6f8}
-header{background:#0f9d58;color:white;padding:18px;font-size:20px}
-.container{max-width:900px;margin:auto;padding:30px}
+
+body{
+margin:0;
+font-family:Segoe UI;
+background:#f4f6f8;
+}
+
+/* HEADER */
+
+header{
+background:#0f9d58;
+color:white;
+padding:20px;
+font-size:22px;
+font-weight:600;
+}
+
+/* CONTAINER */
+
+.container{
+max-width:900px;
+margin:auto;
+padding:25px;
+}
+
+/* CARD */
 
 .card{
 background:white;
 padding:20px;
 margin-bottom:15px;
 border-radius:20px;
-box-shadow:0 10px 25px rgba(0,0,0,0.08);
+box-shadow:0 12px 25px rgba(0,0,0,0.08);
 }
+
+/* ROW */
 
 .row{
 display:flex;
@@ -29,15 +54,20 @@ justify-content:space-between;
 align-items:center;
 }
 
+/* QTY */
+
 .qty-btn{
 background:black;
 color:white;
 border:none;
-width:30px;
-height:30px;
+width:32px;
+height:32px;
 border-radius:50%;
 cursor:pointer;
+font-size:16px;
 }
+
+/* REMOVE */
 
 .remove{
 color:#d32f2f;
@@ -45,31 +75,41 @@ cursor:pointer;
 font-size:14px;
 }
 
+/* SUMMARY */
+
 .summary{
 background:white;
-padding:20px;
+padding:25px;
 border-radius:20px;
-box-shadow:0 10px 25px rgba(0,0,0,0.08);
+box-shadow:0 12px 25px rgba(0,0,0,0.08);
 margin-top:20px;
 }
 
+/* INPUT */
+
 input,textarea{
 width:100%;
-padding:10px;
+padding:12px;
 margin-top:10px;
 border-radius:10px;
 border:1px solid #ddd;
+font-size:15px;
 }
 
+/* PLACE */
+
 .place{
-background:black;
+background:#0f9d58;
 color:white;
-padding:14px;
+padding:15px;
 border-radius:15px;
 text-align:center;
 margin-top:20px;
 cursor:pointer;
+font-weight:600;
 }
+
+/* MODAL */
 
 .modal{
 position:fixed;
@@ -99,6 +139,8 @@ cursor:pointer;
 .yes{background:#0f9d58;color:white}
 .no{background:#ddd}
 
+/* PAYMENT */
+
 .pay-btn{
 display:block;
 width:100%;
@@ -112,6 +154,20 @@ cursor:pointer;
 .cod{background:#4caf50;color:white}
 .online{background:#2196f3;color:white}
 
+/* RESPONSIVE */
+
+@media(max-width:600px){
+
+.container{
+padding:15px;
+}
+
+.card{
+padding:15px;
+}
+
+}
+
 </style>
 </head>
 
@@ -124,6 +180,7 @@ cursor:pointer;
 <div id="cartBox"></div>
 
 <div class="summary">
+
 <h3>Total: ₹<span id="total">0</span></h3>
 
 <input type="text" id="name" placeholder="Full Name">
@@ -133,15 +190,15 @@ cursor:pointer;
 <div class="place" onclick="openConfirm()">Place Order</div>
 
 </div>
+
 </div>
 
-<!-- CONFIRM MODAL -->
+<!-- CONFIRM -->
 
 <div class="modal" id="confirmModal">
 <div class="modal-box">
 
 <h3>Confirm Purchase</h3>
-<p>Are you sure you want to buy these items?</p>
 
 <button class="modal-btn yes" onclick="openPayment()">Yes</button>
 <button class="modal-btn no" onclick="closeConfirm()">No</button>
@@ -149,7 +206,7 @@ cursor:pointer;
 </div>
 </div>
 
-<!-- PAYMENT MODAL -->
+<!-- PAYMENT -->
 
 <div class="modal" id="paymentModal">
 <div class="modal-box">
@@ -161,7 +218,7 @@ Cash On Delivery
 </button>
 
 <button class="pay-btn online" onclick="placeOrder('Online payment on delivery')">
-Online Payment on delivery
+Online Payment on Delivery
 </button>
 
 </div>
@@ -172,46 +229,90 @@ Online Payment on delivery
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
-let total = 0;
+let cart=[];
+let total=0;
+let userEmail="guest";
+
+/* LOGIN CHECK */
 
 auth.onAuthStateChanged(user=>{
-if(!user) window.location="index.html";
-});
 
-/* SAVE CART */
+if(user){
 
-function saveCart(){
-localStorage.setItem("cart",JSON.stringify(cart));
+userEmail=user.email.toLowerCase();
+
+loadCart();
+
+}else{
+
+userEmail="guest";
+
+loadCart();
+
 }
 
-/* RENDER CART */
+});
+
+/* CART KEY */
+
+function cartKey(){
+
+return "cart_"+userEmail;
+
+}
+
+/* SAVE */
+
+function saveCart(){
+
+localStorage.setItem(cartKey(),JSON.stringify(cart));
+
+}
+
+/* LOAD */
+
+function loadCart(){
+
+cart=JSON.parse(localStorage.getItem(cartKey())) || [];
+
+renderCart();
+
+}
+
+/* RENDER */
 
 function renderCart(){
 
-cart = JSON.parse(localStorage.getItem("cart")) || [];
-total = 0;
+total=0;
 
 const box=document.getElementById("cartBox");
+
 box.innerHTML="";
 
 if(cart.length===0){
+
 box.innerHTML="<p>Cart is empty</p>";
+
 document.getElementById("total").innerText=0;
+
 return;
+
 }
 
 cart.forEach((item,i)=>{
 
-total += item.price * item.qty;
+total+=item.price*item.qty;
 
-box.innerHTML += `
+box.innerHTML+=`
 
 <div class="card">
 
 <div class="row">
+
 <strong>${item.name}</strong>
-₹${item.price * item.qty}
+
+₹${item.price*item.qty}
+
 </div>
 
 <div class="row" style="margin-top:10px">
@@ -226,27 +327,31 @@ ${item.qty}
 
 </div>
 
-<div class="remove" onclick="removeItem(${i})">Remove</div>
+<div class="remove" onclick="removeItem(${i})">
+
+Remove
 
 </div>
 
 </div>
 
-`
+</div>
+
+`;
 
 });
 
-document.getElementById("total").innerText = total;
+document.getElementById("total").innerText=total;
 
 }
 
-/* CHANGE QTY */
+/* QTY */
 
 function changeQty(i,v){
 
-cart[i].qty += v;
+cart[i].qty+=v;
 
-if(cart[i].qty <= 1) cart[i].qty = 1;
+if(cart[i].qty<1) cart[i].qty=1;
 
 saveCart();
 
@@ -254,7 +359,7 @@ renderCart();
 
 }
 
-/* REMOVE ITEM */
+/* REMOVE */
 
 function removeItem(i){
 
@@ -266,19 +371,24 @@ renderCart();
 
 }
 
-/* ORDER MODALS */
+/* CONFIRM */
 
 function openConfirm(){
 
 if(cart.length===0) return;
 
 let name=document.getElementById("name").value.trim();
+
 let phone=document.getElementById("phone").value.trim();
+
 let address=document.getElementById("address").value.trim();
 
 if(!name||!phone||!address){
+
 alert("Fill all details");
+
 return;
+
 }
 
 document.getElementById("confirmModal").style.display="flex";
@@ -286,24 +396,41 @@ document.getElementById("confirmModal").style.display="flex";
 }
 
 function closeConfirm(){
+
 document.getElementById("confirmModal").style.display="none";
+
 }
+
+/* PAYMENT */
 
 function openPayment(){
 
 document.getElementById("confirmModal").style.display="none";
+
 document.getElementById("paymentModal").style.display="flex";
 
 }
 
-/* PLACE ORDER */
+/* ORDER */
 
 function placeOrder(method){
 
 const user=auth.currentUser;
 
+if(!user){
+
+alert("Please login to place order");
+
+window.location="login.html";
+
+return;
+
+}
+
 let name=document.getElementById("name").value.trim();
+
 let phone=document.getElementById("phone").value.trim();
+
 let address=document.getElementById("address").value.trim();
 
 db.collection("orders").add({
@@ -318,15 +445,13 @@ created:firebase.firestore.FieldValue.serverTimestamp()
 
 }).then(()=>{
 
-localStorage.removeItem("cart");
+localStorage.removeItem(cartKey());
 
 window.location="success.html";
 
-})
+});
 
 }
-
-renderCart();
 
 </script>
 
