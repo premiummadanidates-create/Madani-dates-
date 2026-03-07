@@ -2,26 +2,78 @@
 <html>
 <head>
 
+<meta charset="UTF-8">
+<title>My Orders</title>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-<script src="../firebase.js"></script>
+<script src="firebase.js"></script>
+
+<style>
+
+body{
+margin:0;
+font-family:Segoe UI;
+background:#f4f6f8;
+}
+
+header{
+background:#0f9d58;
+color:white;
+padding:18px;
+text-align:center;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+padding:20px;
+}
+
+.order{
+background:white;
+padding:20px;
+border-radius:15px;
+margin-bottom:15px;
+box-shadow:0 5px 20px rgba(0,0,0,0.08);
+}
+
+.status{
+font-weight:bold;
+color:#0f9d58;
+}
+
+</style>
 
 </head>
 
 <body>
 
-<h2>Admin Orders</h2>
+<header>My Orders</header>
 
-<div id="orders"></div>
+<div class="container" id="orders"></div>
 
 <script>
 
+const auth=firebase.auth()
 const db=firebase.firestore()
 
+auth.onAuthStateChanged(user=>{
+
+if(!user){
+
+window.location="login.html"
+return
+
+}
+
 db.collection("orders")
+
+.where("userEmail","==",user.email)
+
 .onSnapshot(snapshot=>{
 
 let html=""
@@ -32,15 +84,17 @@ let o=doc.data()
 
 html+=`
 
-<div>
+<div class="order">
 
-Customer: ${o.userEmail}
-
-<br>
-
-Status: ${o.status}
+<div class="status">
+${o.status}
+</div>
 
 <br>
+
+Total ₹${o.total}
+
+<br><br>
 
 ${o.items.map(i=>i.name+" x"+i.qty).join("<br>")}
 
@@ -51,6 +105,8 @@ ${o.items.map(i=>i.name+" x"+i.qty).join("<br>")}
 })
 
 document.getElementById("orders").innerHTML=html
+
+})
 
 })
 
