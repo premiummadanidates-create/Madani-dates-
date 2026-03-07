@@ -90,12 +90,7 @@ cursor:pointer
 
 .send{background:#2196f3;color:white;width:100%}
 .verify{background:#4caf50;color:white;width:100%}
-
-.place{
-background:black;
-color:white;
-width:100%
-}
+.place{background:black;color:white;width:100%}
 
 .modal{
 position:fixed;
@@ -154,30 +149,19 @@ margin-top:10px
 </div>
 
 <div class="modal" id="confirmModal">
-
 <div class="modal-box">
-
 <h3>Confirm Order</h3>
-
 <button onclick="openPayment()">Confirm</button>
 <button onclick="closeConfirm()">Cancel</button>
-
 </div>
-
 </div>
 
 <div class="modal" id="paymentModal">
-
 <div class="modal-box">
-
 <h3>Select Payment</h3>
-
 <button class="pay-btn cod" onclick="placeOrder('COD')">Cash On Delivery</button>
-
 <button class="pay-btn online" onclick="placeOrder('Online on delivery')">Online on delivery</button>
-
 </div>
-
 </div>
 
 <script>
@@ -187,14 +171,30 @@ emailjs.init("4zPe-PgOyx0M15xLm")
 const auth=firebase.auth()
 const db=firebase.firestore()
 
-let cart=JSON.parse(localStorage.getItem("cart"))||[]
+let cart=[]
 let total=0
 let otp=""
 let verified=false
+let currentUser=null
+
+/* AUTH CHECK */
 
 auth.onAuthStateChanged(user=>{
-if(!user) window.location="login.html"
+
+if(!user){
+window.location="login.html"
+return
+}
+
+currentUser=user
+
+cart=JSON.parse(localStorage.getItem("cart_"+user.email))||[]
+
+renderCart()
+
 })
+
+/* RENDER CART */
 
 function renderCart(){
 
@@ -203,6 +203,12 @@ total=0
 let box=document.getElementById("cartBox")
 
 box.innerHTML=""
+
+if(cart.length==0){
+box.innerHTML="<p>Cart empty</p>"
+document.getElementById("total").innerText=0
+return
+}
 
 cart.forEach((item,i)=>{
 
@@ -213,11 +219,8 @@ box.innerHTML+=`
 <div class="card">
 
 <div class="row">
-
 <b>${item.name}</b>
-
 ₹${item.price*item.qty}
-
 </div>
 
 <div class="row">
@@ -246,47 +249,71 @@ document.getElementById("total").innerText=total
 
 }
 
+/* QTY CHANGE */
+
 function changeQty(i,v){
 
 cart[i].qty+=v
 
 if(cart[i].qty<1) cart[i].qty=1
 
-localStorage.setItem("cart",JSON.stringify(cart))
+saveCart()
 
 renderCart()
 
 }
+
+/* REMOVE */
 
 function removeItem(i){
 
 cart.splice(i,1)
 
-localStorage.setItem("cart",JSON.stringify(cart))
+saveCart()
 
 renderCart()
 
 }
 
+/* SAVE CART */
+
+function saveCart(){
+
+localStorage.setItem("cart_"+currentUser.email,JSON.stringify(cart))
+
+}
+
+/* SEND OTP */
+
 function sendOTP(){
 
-const user=auth.currentUser
+if(cart.length==0){
+alert("Cart empty")
+return
+}
+
+const user=currentUser
 
 otp=Math.floor(100000+Math.random()*900000)
 
 emailjs.send("madani_dates","template_otp",{
 
 to_email:user.email,
-
 otp:otp
 
 }).then(()=>{
 
 alert("OTP sent to your email")
 
+}).catch(()=>{
+
+alert("Failed to send OTP")
+
 })
 
 }
+
+/* VERIFY OTP */
 
 function verifyOTP(){
 
@@ -305,24 +332,35 @@ alert("Wrong OTP")
 
 }
 
+/* OPEN CONFIRM */
+
 function openConfirm(){
 
 if(!verified){
-
 alert("Verify OTP first")
 return
+}
 
+let name=document.getElementById("name").value
+let phone=document.getElementById("phone").value
+let address=document.getElementById("address").value
+
+if(!name||!phone||!address){
+alert("Fill all details")
+return
 }
 
 document.getElementById("confirmModal").style.display="flex"
 
 }
 
+/* CLOSE */
+
 function closeConfirm(){
-
 document.getElementById("confirmModal").style.display="none"
-
 }
+
+/* OPEN PAYMENT */
 
 function openPayment(){
 
@@ -332,9 +370,9 @@ document.getElementById("paymentModal").style.display="flex"
 
 }
 
-function placeOrder(method){
+/* PLACE ORDER */
 
-const user=auth.currentUser
+function placeOrder(method){
 
 let name=document.getElementById("name").value
 let phone=document.getElementById("phone").value
@@ -350,7 +388,7 @@ payment:method,
 
 status:"Pending",
 
-userEmail:user.email,
+userEmail:currentUser.email,
 
 customer:{
 name:name,
@@ -362,15 +400,13 @@ created:firebase.firestore.FieldValue.serverTimestamp()
 
 }).then(()=>{
 
-localStorage.removeItem("cart")
+localStorage.removeItem("cart_"+currentUser.email)
 
 window.location="success.html"
 
 })
 
 }
-
-renderCart()
 
 </script>
 
