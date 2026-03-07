@@ -2,8 +2,6 @@
 <html>
 <head>
 
-<meta charset="UTF-8">
-<title>Madani Dates Cart</title>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -11,230 +9,93 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script src="firebase.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <style>
 
 body{
-margin:0;
 font-family:Segoe UI;
 background:#f4f6f8;
+margin:0;
 }
-
-/* HEADER */
-
-header{
-background:#0f9d58;
-color:white;
-padding:18px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-}
-
-/* LOGIN BOX */
-
-.login-box{
-display:none;
-height:80vh;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-text-align:center;
-}
-
-.login-btn{
-background:#0f9d58;
-color:white;
-border:none;
-padding:12px 25px;
-border-radius:10px;
-margin-top:15px;
-cursor:pointer;
-}
-
-/* CART */
 
 .container{
-display:none;
 max-width:900px;
 margin:auto;
-padding:25px;
+padding:20px;
 }
 
 .card{
 background:white;
-padding:20px;
-border-radius:18px;
-margin-bottom:15px;
-box-shadow:0 8px 20px rgba(0,0,0,0.08);
-}
-
-.summary{
-background:white;
-padding:20px;
-border-radius:15px;
-margin-top:20px;
-box-shadow:0 8px 20px rgba(0,0,0,0.08);
-}
-
-input,textarea{
-width:100%;
-padding:12px;
-margin-top:10px;
+padding:15px;
 border-radius:10px;
-border:1px solid #ddd;
+margin-bottom:10px;
 }
 
 button{
-width:100%;
-padding:14px;
-margin-top:10px;
+padding:8px 12px;
 border:none;
-border-radius:10px;
+border-radius:6px;
 cursor:pointer;
-font-weight:600;
 }
 
-.otp{background:#2196f3;color:white;}
-.verify{background:#4caf50;color:white;}
-.order{background:black;color:white;}
-
 </style>
+
 </head>
 
 <body>
 
-<header>
+<div class="container">
 
-<div>Madani Dates Cart</div>
+<h2>Your Cart</h2>
 
-<button onclick="logout()">Logout</button>
+<div id="cartBox"></div>
 
-</header>
-
-
-<!-- LOGIN REQUIRED -->
-
-<div id="loginScreen" class="login-box">
-
-<h2>Please Login First</h2>
-
-<p>You must login to order</p>
-
-<button class="login-btn"
-onclick="window.location='login.html'">
-
-Login
-
+<button onclick="placeOrder()">
+Place Order
 </button>
 
 </div>
 
-
-<!-- CART -->
-
-<div id="cartScreen" class="container">
-
-<div id="cartBox"></div>
-
-<div class="summary">
-
-<h3>Total ₹<span id="total">0</span></h3>
-
-<input id="email" placeholder="Email">
-<input id="name" placeholder="Full Name">
-<input id="phone" placeholder="Phone Number">
-
-<textarea id="address" placeholder="Full Address"></textarea>
-
-<input id="deliveryTime" placeholder="Delivery Time (Example 3:30 PM)">
-
-<button class="otp" onclick="sendOTP()">Send OTP</button>
-
-<input id="otpInput" placeholder="Enter OTP">
-
-<button class="verify" onclick="verifyOTP()">Verify OTP</button>
-
-<button class="order" onclick="placeOrder()">Place Order</button>
-
-</div>
-
-</div>
-
-
 <script>
-
-emailjs.init("4zPe-PgOyx0M15xLm")
 
 const auth=firebase.auth()
 const db=firebase.firestore()
 
-let cart=JSON.parse(localStorage.getItem("cart"))||[]
-
-let total=0
-let generatedOTP=""
-let verified=false
-
-
-/* LOGIN CHECK */
+let userEmail=""
+let cart=[]
 
 auth.onAuthStateChanged(user=>{
 
-if(user){
+if(!user){
 
-document.getElementById("loginScreen").style.display="none"
-document.getElementById("cartScreen").style.display="block"
+window.location="login.html"
+return
+
+}
+
+userEmail=user.email
+
+cart=JSON.parse(localStorage.getItem("cart_"+userEmail))||[]
 
 renderCart()
 
-}else{
-
-document.getElementById("loginScreen").style.display="flex"
-document.getElementById("cartScreen").style.display="none"
-
-}
-
 })
-
-
-/* LOGOUT */
-
-function logout(){
-
-firebase.auth().signOut().then(()=>{
-
-window.location="login.html"
-
-})
-
-}
-
-
-/* CART */
 
 function renderCart(){
 
 let box=document.getElementById("cartBox")
+
 box.innerHTML=""
 
-total=0
-
-cart.forEach(item=>{
-
-total+=item.price*item.qty
+cart.forEach((item,i)=>{
 
 box.innerHTML+=`
 
 <div class="card">
 
-<b>${item.name}</b>
+${item.name}
 
-<br>
-
-Price ₹${item.price}
-
-<br>
+₹${item.price}
 
 Qty ${item.qty}
 
@@ -244,104 +105,27 @@ Qty ${item.qty}
 
 })
 
-document.getElementById("total").innerText=total
-
 }
-
-
-/* OTP */
-
-function sendOTP(){
-
-let email=document.getElementById("email").value
-
-generatedOTP=Math.floor(100000+Math.random()*900000)
-
-emailjs.send("madani_dates","template_w9iemq6",{
-
-otp:generatedOTP,
-to_email:email
-
-}).then(()=>{
-
-alert("OTP sent to email")
-
-})
-
-}
-
-
-/* VERIFY */
-
-function verifyOTP(){
-
-let userOTP=document.getElementById("otpInput").value
-
-if(userOTP==generatedOTP){
-
-verified=true
-alert("OTP verified")
-
-}else{
-
-alert("Wrong OTP")
-
-}
-
-}
-
-
-/* PLACE ORDER */
 
 function placeOrder(){
-
-if(!verified){
-
-alert("Verify OTP first")
-return
-
-}
-
-let user=auth.currentUser
-
-let name=document.getElementById("name").value
-let phone=document.getElementById("phone").value
-let address=document.getElementById("address").value
-let email=document.getElementById("email").value
-let deliveryTime=document.getElementById("deliveryTime").value
 
 db.collection("orders").add({
 
 items:cart,
 
-total:total,
+userEmail:userEmail,
 
 status:"Pending",
 
-payment:"COD",
-
-userEmail:user.email,
-
-customer:{
-
-name:name,
-phone:phone,
-address:address,
-email:email
-
-},
-
-deliveryTime:deliveryTime,
-
-created:firebase.firestore.FieldValue.serverTimestamp()
+created:new Date()
 
 }).then(()=>{
 
-localStorage.removeItem("cart")
+localStorage.removeItem("cart_"+userEmail)
 
-alert("Order placed successfully")
+alert("Order placed")
 
-window.location="orders.html"
+window.location="myorders.html"
 
 })
 
