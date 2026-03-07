@@ -4,7 +4,7 @@
 
 <meta charset="UTF-8">
 <title>My Orders</title>
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -17,33 +17,45 @@
 body{
 margin:0;
 font-family:Segoe UI;
-background:#f4f6f8;
+background:#f4f6f8
 }
 
 header{
 background:#0f9d58;
 color:white;
-padding:18px;
-text-align:center;
+padding:20px;
+font-size:20px
 }
 
 .container{
 max-width:900px;
 margin:auto;
-padding:20px;
+padding:25px
 }
 
 .order{
 background:white;
 padding:20px;
-border-radius:15px;
-margin-bottom:15px;
-box-shadow:0 5px 20px rgba(0,0,0,0.08);
+border-radius:20px;
+margin-bottom:20px;
+box-shadow:0 10px 25px rgba(0,0,0,0.08);
+cursor:pointer
 }
 
-.status{
-font-weight:bold;
-color:#0f9d58;
+.modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.6);
+display:none;
+justify-content:center;
+align-items:center
+}
+
+.box{
+background:white;
+padding:25px;
+border-radius:20px;
+width:320px
 }
 
 </style>
@@ -56,59 +68,94 @@ color:#0f9d58;
 
 <div class="container" id="orders"></div>
 
+<div class="modal" id="popup">
+<div class="box" id="details"></div>
+</div>
+
 <script>
 
-const auth=firebase.auth()
-const db=firebase.firestore()
+const auth=firebase.auth();
+const db=firebase.firestore();
 
 auth.onAuthStateChanged(user=>{
 
 if(!user){
-
-window.location="login.html"
-return
-
+window.location="login.html";
+return;
 }
 
 db.collection("orders")
-
 .where("userEmail","==",user.email)
-
 .onSnapshot(snapshot=>{
 
-let html=""
+let html="";
 
 snapshot.forEach(doc=>{
 
-let o=doc.data()
+let o=doc.data();
 
 html+=`
 
-<div class="order">
+<div class="order" onclick="showDetails('${doc.id}')">
 
-<div class="status">
-${o.status}
-</div>
-
+<b>Status:</b> ${o.status}
 <br>
-
-Total ₹${o.total}
-
-<br><br>
-
-${o.items.map(i=>i.name+" x"+i.qty).join("<br>")}
+<b>Total:</b> ₹${o.total}
+<br>
+<b>Payment:</b> ${o.payment}
 
 </div>
 
 `
 
-})
+});
 
-document.getElementById("orders").innerHTML=html
+document.getElementById("orders").innerHTML=html;
 
-})
+});
 
-})
+});
+
+function showDetails(id){
+
+db.collection("orders").doc(id).get().then(doc=>{
+
+let o=doc.data();
+
+let items=o.items.map(i=>i.name+" x"+i.qty).join("<br>");
+
+document.getElementById("details").innerHTML=`
+
+<h3>Order Details</h3>
+
+${items}
+
+<br><br>
+
+<b>Name:</b> ${o.customer.name}<br>
+<b>Phone:</b> ${o.customer.phone}<br>
+<b>Address:</b> ${o.customer.address}<br>
+
+<br>
+
+<b>Total:</b> ₹${o.total}<br>
+<b>Status:</b> ${o.status}
+
+<br><br>
+
+<button onclick="closePopup()">Close</button>
+
+`;
+
+document.getElementById("popup").style.display="flex";
+
+});
+
+}
+
+function closePopup(){
+document.getElementById("popup").style.display="none";
+}
 
 </script>
 
