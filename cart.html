@@ -21,6 +21,8 @@ font-family:Segoe UI;
 background:#f4f6f8;
 }
 
+/* HEADER */
+
 header{
 background:#0f9d58;
 color:white;
@@ -29,10 +31,35 @@ font-size:20px;
 font-weight:600;
 }
 
+/* LOGIN REQUIRED */
+
+.login-box{
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+height:80vh;
+text-align:center;
+}
+
+.login-btn{
+background:#0f9d58;
+color:white;
+padding:12px 25px;
+border:none;
+border-radius:10px;
+margin-top:15px;
+cursor:pointer;
+font-size:16px;
+}
+
+/* CONTAINER */
+
 .container{
 max-width:900px;
 margin:auto;
 padding:25px;
+display:none;
 }
 
 .card{
@@ -94,6 +121,8 @@ cursor:pointer;
 .verify{background:#4caf50;color:white}
 .place{background:black;color:white}
 
+/* MODALS */
+
 .modal{
 position:fixed;
 inset:0;
@@ -109,14 +138,6 @@ padding:25px;
 border-radius:20px;
 width:320px;
 text-align:center;
-}
-
-.modal-btn{
-margin:10px;
-padding:10px 20px;
-border:none;
-border-radius:10px;
-cursor:pointer;
 }
 
 .pay-btn{
@@ -138,7 +159,27 @@ cursor:pointer;
 
 <header>Your Cart</header>
 
-<div class="container">
+<!-- LOGIN REQUIRED -->
+
+<div class="login-box" id="loginRequired">
+
+<h2>Please Login First</h2>
+
+<p>You must login to view your cart</p>
+
+<button class="login-btn"
+onclick="window.location='login.html'">
+
+Login
+
+</button>
+
+</div>
+
+
+<!-- REAL CART -->
+
+<div class="container" id="cartContainer">
 
 <div id="cartBox"></div>
 
@@ -163,37 +204,52 @@ cursor:pointer;
 
 </div>
 
-<!-- CONFIRMATION -->
+
+<!-- CONFIRM -->
 
 <div class="modal" id="confirmModal">
+
 <div class="modal-box">
 
 <h3>Confirm Order</h3>
-<p>Are you sure you want to place order?</p>
 
-<button class="modal-btn" onclick="openPayment()">Yes</button>
-<button class="modal-btn" onclick="closeConfirm()">No</button>
+<p>Are you sure?</p>
+
+<button onclick="openPayment()">Yes</button>
+
+<button onclick="closeConfirm()">No</button>
 
 </div>
+
 </div>
+
 
 <!-- PAYMENT -->
 
 <div class="modal" id="paymentModal">
+
 <div class="modal-box">
 
 <h3>Select Payment</h3>
 
-<button class="pay-btn cod" onclick="placeOrder('COD')">
+<button class="pay-btn cod"
+onclick="placeOrder('COD')">
+
 Cash On Delivery
+
 </button>
 
-<button class="pay-btn online" onclick="placeOrder('Online payment on delivery')">
-Online Payment On Delivery
+<button class="pay-btn online"
+onclick="placeOrder('Online payment on delivery')">
+
+Online On Delivery
+
 </button>
 
 </div>
+
 </div>
+
 
 <script>
 
@@ -204,17 +260,28 @@ const db=firebase.firestore()
 
 let cart=JSON.parse(localStorage.getItem("cart"))||[]
 let total=0
-
 let generatedOTP=""
 let verified=false
 
+
+/* LOGIN CHECK */
+
 auth.onAuthStateChanged(user=>{
 
-if(!user){
-window.location="login.html"
+if(user){
+
+document.getElementById("loginRequired").style.display="none"
+document.getElementById("cartContainer").style.display="block"
+
+renderCart()
+
 }
 
 })
+
+
+
+/* CART */
 
 function renderCart(){
 
@@ -238,13 +305,20 @@ box.innerHTML+=`
 <div class="row">
 
 <div class="qty">
+
 <button onclick="changeQty(${i},-1)">-</button>
+
 ${item.qty}
+
 <button onclick="changeQty(${i},1)">+</button>
+
 </div>
 
-<div class="remove" onclick="removeItem(${i})">
+<div class="remove"
+onclick="removeItem(${i})">
+
 Remove
+
 </div>
 
 </div>
@@ -259,15 +333,20 @@ document.getElementById("total").innerText=total
 
 }
 
+
+
 function changeQty(i,v){
 
 cart[i].qty+=v
+
 if(cart[i].qty<1)cart[i].qty=1
 
 saveCart()
 renderCart()
 
 }
+
+
 
 function removeItem(i){
 
@@ -278,9 +357,15 @@ renderCart()
 
 }
 
+
+
 function saveCart(){
+
 localStorage.setItem("cart",JSON.stringify(cart))
+
 }
+
+
 
 /* OTP */
 
@@ -288,27 +373,22 @@ function sendOTP(){
 
 let email=document.getElementById("email").value.trim()
 
-if(!email){
-alert("Enter Email")
-return
-}
-
 generatedOTP=Math.floor(100000+Math.random()*900000)
 
 emailjs.send("madani_dates","template_w9iemq6",{
+
 otp:generatedOTP,
 to_email:email
-})
 
-.then(()=>{
-alert("OTP Sent To Email")
-})
+}).then(()=>{
 
-.catch(()=>{
-alert("Failed To Send OTP")
+alert("OTP sent to email")
+
 })
 
 }
+
+
 
 function verifyOTP(){
 
@@ -317,7 +397,7 @@ let userOTP=document.getElementById("otpInput").value
 if(userOTP==generatedOTP){
 
 verified=true
-alert("OTP Verified")
+alert("OTP verified")
 
 }else{
 
@@ -327,18 +407,24 @@ alert("Wrong OTP")
 
 }
 
+
+
 /* CONFIRM */
 
 function openConfirm(){
 
 if(!verified){
-alert("Verify OTP First")
+
+alert("Verify OTP first")
 return
+
 }
 
 document.getElementById("confirmModal").style.display="flex"
 
 }
+
+
 
 function closeConfirm(){
 
@@ -346,12 +432,16 @@ document.getElementById("confirmModal").style.display="none"
 
 }
 
+
+
 function openPayment(){
 
 document.getElementById("confirmModal").style.display="none"
 document.getElementById("paymentModal").style.display="flex"
 
 }
+
+
 
 /* ORDER */
 
@@ -374,9 +464,7 @@ userEmail:user.email.toLowerCase(),
 customer:{name,phone,address,email},
 created:firebase.firestore.FieldValue.serverTimestamp()
 
-})
-
-.then(()=>{
+}).then(()=>{
 
 localStorage.removeItem("cart")
 
@@ -385,8 +473,6 @@ window.location="success.html"
 })
 
 }
-
-renderCart()
 
 </script>
 
