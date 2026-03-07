@@ -9,8 +9,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="firebase.js"></script>
 
+<script src="firebase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <style>
@@ -24,7 +24,7 @@ background:#f4f6f8;
 header{
 background:#0f9d58;
 color:white;
-padding:20px;
+padding:18px;
 font-size:20px;
 font-weight:600;
 }
@@ -90,20 +90,9 @@ font-weight:600;
 cursor:pointer;
 }
 
-.send{
-background:#2196f3;
-color:white;
-}
-
-.verify{
-background:#4caf50;
-color:white;
-}
-
-.place{
-background:black;
-color:white;
-}
+.send{background:#2196f3;color:white}
+.verify{background:#4caf50;color:white}
+.place{background:black;color:white}
 
 .modal{
 position:fixed;
@@ -122,6 +111,14 @@ width:320px;
 text-align:center;
 }
 
+.modal-btn{
+margin:10px;
+padding:10px 20px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+}
+
 .pay-btn{
 width:100%;
 padding:12px;
@@ -131,8 +128,8 @@ border-radius:10px;
 cursor:pointer;
 }
 
-.cod{background:#4caf50;color:white;}
-.online{background:#2196f3;color:white;}
+.cod{background:#4caf50;color:white}
+.online{background:#2196f3;color:white}
 
 </style>
 </head>
@@ -147,7 +144,7 @@ cursor:pointer;
 
 <div class="summary">
 
-<h3>Total: ₹<span id="total">0</span></h3>
+<h3>Total ₹<span id="total">0</span></h3>
 
 <input id="email" placeholder="Email">
 <input id="name" placeholder="Full Name">
@@ -160,13 +157,27 @@ cursor:pointer;
 
 <button class="verify" onclick="verifyOTP()">Verify OTP</button>
 
-<button class="place" onclick="openPayment()">Place Order</button>
+<button class="place" onclick="openConfirm()">Place Order</button>
 
 </div>
 
 </div>
 
-<!-- PAYMENT MODAL -->
+<!-- CONFIRMATION -->
+
+<div class="modal" id="confirmModal">
+<div class="modal-box">
+
+<h3>Confirm Order</h3>
+<p>Are you sure you want to place order?</p>
+
+<button class="modal-btn" onclick="openPayment()">Yes</button>
+<button class="modal-btn" onclick="closeConfirm()">No</button>
+
+</div>
+</div>
+
+<!-- PAYMENT -->
 
 <div class="modal" id="paymentModal">
 <div class="modal-box">
@@ -177,8 +188,8 @@ cursor:pointer;
 Cash On Delivery
 </button>
 
-<button class="pay-btn online" onclick="placeOrder('Online Payment on Delivery')">
-Online Payment on Delivery
+<button class="pay-btn online" onclick="placeOrder('Online payment on delivery')">
+Online Payment On Delivery
 </button>
 
 </div>
@@ -186,19 +197,28 @@ Online Payment on Delivery
 
 <script>
 
-emailjs.init("TYTHM8wcS8EZRYr_C")
+emailjs.init("4zPe-PgOyx0M15xLm")
 
 const auth=firebase.auth()
 const db=firebase.firestore()
 
 let cart=JSON.parse(localStorage.getItem("cart"))||[]
 let total=0
+
 let generatedOTP=""
 let verified=false
 
+auth.onAuthStateChanged(user=>{
+
+if(!user){
+window.location="login.html"
+}
+
+})
+
 function renderCart(){
 
-const box=document.getElementById("cartBox")
+let box=document.getElementById("cartBox")
 box.innerHTML=""
 total=0
 
@@ -218,11 +238,9 @@ box.innerHTML+=`
 <div class="row">
 
 <div class="qty">
-
 <button onclick="changeQty(${i},-1)">-</button>
 ${item.qty}
 <button onclick="changeQty(${i},1)">+</button>
-
 </div>
 
 <div class="remove" onclick="removeItem(${i})">
@@ -271,25 +289,23 @@ function sendOTP(){
 let email=document.getElementById("email").value.trim()
 
 if(!email){
-alert("Enter email")
+alert("Enter Email")
 return
 }
 
 generatedOTP=Math.floor(100000+Math.random()*900000)
 
 emailjs.send("madani_dates","template_w9iemq6",{
-
 otp:generatedOTP,
 to_email:email
+})
 
-}).then(()=>{
+.then(()=>{
+alert("OTP Sent To Email")
+})
 
-alert("OTP sent to your email")
-
-}).catch(()=>{
-
-alert("Failed to send OTP")
-
+.catch(()=>{
+alert("Failed To Send OTP")
 })
 
 }
@@ -301,7 +317,7 @@ let userOTP=document.getElementById("otpInput").value
 if(userOTP==generatedOTP){
 
 verified=true
-alert("OTP verified")
+alert("OTP Verified")
 
 }else{
 
@@ -311,29 +327,42 @@ alert("Wrong OTP")
 
 }
 
-/* PAYMENT */
+/* CONFIRM */
 
-function openPayment(){
+function openConfirm(){
 
 if(!verified){
-alert("Verify OTP first")
+alert("Verify OTP First")
 return
 }
 
+document.getElementById("confirmModal").style.display="flex"
+
+}
+
+function closeConfirm(){
+
+document.getElementById("confirmModal").style.display="none"
+
+}
+
+function openPayment(){
+
+document.getElementById("confirmModal").style.display="none"
 document.getElementById("paymentModal").style.display="flex"
 
 }
 
-/* PLACE ORDER */
+/* ORDER */
 
 function placeOrder(method){
 
-const user=auth.currentUser
+let user=auth.currentUser
 
-let name=document.getElementById("name").value.trim()
-let phone=document.getElementById("phone").value.trim()
-let address=document.getElementById("address").value.trim()
-let email=document.getElementById("email").value.trim()
+let name=document.getElementById("name").value
+let phone=document.getElementById("phone").value
+let address=document.getElementById("address").value
+let email=document.getElementById("email").value
 
 db.collection("orders").add({
 
@@ -341,11 +370,13 @@ items:cart,
 total:total,
 payment:method,
 status:"Pending",
-userEmail:user?user.email.toLowerCase():email,
+userEmail:user.email.toLowerCase(),
 customer:{name,phone,address,email},
 created:firebase.firestore.FieldValue.serverTimestamp()
 
-}).then(()=>{
+})
+
+.then(()=>{
 
 localStorage.removeItem("cart")
 
