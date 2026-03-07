@@ -38,7 +38,7 @@ color:#0f9d58;
 }
 
 .menu a{
-margin-left:20px;
+margin-left:18px;
 text-decoration:none;
 color:#333;
 font-weight:600;
@@ -69,11 +69,6 @@ background:white;
 border-radius:18px;
 padding:18px;
 box-shadow:0 10px 25px rgba(0,0,0,0.08);
-transition:.3s;
-}
-
-.card:hover{
-transform:translateY(-5px);
 }
 
 .card img{
@@ -100,7 +95,6 @@ width:100%;
 border-radius:10px;
 margin-top:12px;
 cursor:pointer;
-font-weight:600;
 }
 
 /* QTY */
@@ -109,19 +103,19 @@ font-weight:600;
 display:flex;
 justify-content:center;
 align-items:center;
-gap:12px;
-margin-top:12px;
+gap:10px;
+margin-top:10px;
 }
 
 .qty button{
-width:34px;
-height:34px;
+width:32px;
+height:32px;
 border:none;
 border-radius:50%;
 background:#0f9d58;
 color:white;
-font-size:18px;
 cursor:pointer;
+font-size:18px;
 }
 
 /* CART BUTTON */
@@ -173,34 +167,26 @@ Go To Cart
 
 </a>
 
-<<script>
+<script>
 
-const auth = firebase.auth();
-const db = firebase.firestore();
+const auth=firebase.auth()
+const db=firebase.firestore()
 
-let currentUser = null;
+let currentUser=null
 
-/* AUTH CHECK */
-
-auth.onAuthStateChanged(user => {
-
-currentUser = user;
-
-loadProducts();
-
-});
+auth.onAuthStateChanged(user=>{
+currentUser=user
+})
 
 /* LOAD PRODUCTS */
 
-function loadProducts(){
-
 db.collection("products").onSnapshot(snapshot=>{
 
-let html="";
+let html=""
 
 snapshot.forEach(doc=>{
 
-let p=doc.data();
+let p=doc.data()
 
 html+=`
 
@@ -216,22 +202,22 @@ html+=`
 
 <button class="add"
 onclick="addCart('${p.name}',${p.price},'${doc.id}')">
+
 Add To Cart
+
 </button>
 
 </div>
 
 </div>
 
-`;
+`
 
-});
+})
 
-document.getElementById("products").innerHTML=html;
+document.getElementById("products").innerHTML=html
 
-});
-
-}
+})
 
 /* ADD CART */
 
@@ -239,20 +225,20 @@ function addCart(name,price,id){
 
 if(!currentUser){
 
-window.location="login.html";
-return;
+window.location="login.html"
+return
 
 }
 
-let key = "cart_"+currentUser.email;
+let key="cart_"+currentUser.email
 
-let cart = JSON.parse(localStorage.getItem(key)) || [];
+let cart=JSON.parse(localStorage.getItem(key))||[]
 
-let item = cart.find(p=>p.name===name);
+let item=cart.find(p=>p.name===name)
 
 if(item){
 
-item.qty++;
+item.qty++
 
 }else{
 
@@ -260,25 +246,25 @@ cart.push({
 name:name,
 price:price,
 qty:1
-});
+})
 
 }
 
-localStorage.setItem(key,JSON.stringify(cart));
+localStorage.setItem(key,JSON.stringify(cart))
 
-updateButton(name,price,id);
+showQty(name,price,id)
 
 }
 
-/* UPDATE BUTTON */
+/* SHOW QTY */
 
-function updateButton(name,price,id){
+function showQty(name,price,id){
 
-let key="cart_"+currentUser.email;
+let key="cart_"+currentUser.email
 
-let cart=JSON.parse(localStorage.getItem(key)) || [];
+let cart=JSON.parse(localStorage.getItem(key))||[]
 
-let item=cart.find(p=>p.name===name);
+let item=cart.find(p=>p.name===name)
 
 document.getElementById("btn-"+id).innerHTML=`
 
@@ -292,7 +278,7 @@ document.getElementById("btn-"+id).innerHTML=`
 
 </div>
 
-`;
+`
 
 }
 
@@ -300,17 +286,17 @@ document.getElementById("btn-"+id).innerHTML=`
 
 function changeQty(name,price,newQty,id){
 
-let key="cart_"+currentUser.email;
+let key="cart_"+currentUser.email
 
-let cart=JSON.parse(localStorage.getItem(key)) || [];
+let cart=JSON.parse(localStorage.getItem(key))||[]
 
-let item=cart.find(p=>p.name===name);
+let item=cart.find(p=>p.name===name)
 
-item.qty=newQty;
+item.qty=newQty
 
 if(item.qty<1){
 
-cart=cart.filter(p=>p.name!=name);
+cart=cart.filter(p=>p.name!=name)
 
 document.getElementById("btn-"+id).innerHTML=`
 
@@ -319,18 +305,19 @@ onclick="addCart('${name}',${price},'${id}')">
 Add To Cart
 </button>
 
-`;
+`
 
 }else{
 
-updateButton(name,price,id);
+showQty(name,price,id)
 
 }
 
-localStorage.setItem(key,JSON.stringify(cart));
+localStorage.setItem(key,JSON.stringify(cart))
 
 }
 
 </script>
+
 </body>
 </html>
