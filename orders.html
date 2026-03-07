@@ -14,18 +14,24 @@
 
 <style>
 
+/* GLOBAL */
+
 body{
 margin:0;
 font-family:Segoe UI;
 background:#f4f6f8;
 }
 
+/* HEADER */
+
 header{
 background:#0f9d58;
 color:white;
-padding:20px;
+padding:18px;
 display:flex;
 align-items:center;
+font-size:20px;
+font-weight:600;
 }
 
 .back{
@@ -34,33 +40,55 @@ cursor:pointer;
 font-size:18px;
 }
 
+/* CONTAINER */
+
 .container{
 max-width:900px;
 margin:auto;
 padding:25px;
 }
 
+/* ORDER CARD */
+
 .order{
 background:white;
-padding:20px;
-border-radius:20px;
+padding:22px;
+border-radius:22px;
 margin-bottom:20px;
-box-shadow:0 10px 25px rgba(0,0,0,0.08);
+box-shadow:0 12px 30px rgba(0,0,0,0.08);
+transition:.3s;
 }
+
+.order:hover{
+transform:translateY(-4px);
+}
+
+/* STATUS */
+
+.status{
+font-weight:bold;
+margin-bottom:5px;
+}
+
+/* DELIVERY TIME */
 
 .time{
 color:#0f9d58;
 font-weight:bold;
-margin-top:5px;
+margin-top:6px;
 }
+
+/* OTP BOX */
 
 .otp{
 background:#fff3cd;
-padding:10px;
-border-radius:10px;
+padding:12px;
+border-radius:12px;
 margin-top:10px;
 font-weight:bold;
 }
+
+/* TRACK BAR */
 
 .track{
 height:8px;
@@ -68,18 +96,38 @@ background:#ddd;
 border-radius:10px;
 margin-top:15px;
 position:relative;
+overflow:hidden;
 }
 
 .progress{
 height:100%;
 background:#0f9d58;
 border-radius:10px;
+transition:width .6s;
 }
 
 .truck{
 position:absolute;
 top:-18px;
-font-size:24px;
+font-size:22px;
+}
+
+/* EMPTY */
+
+.empty{
+text-align:center;
+color:#666;
+margin-top:50px;
+font-size:18px;
+}
+
+/* LOADING */
+
+.loading{
+text-align:center;
+margin-top:50px;
+font-size:18px;
+color:#777;
 }
 
 </style>
@@ -90,31 +138,64 @@ font-size:24px;
 
 <header>
 
-<div class="back" onclick="window.location='home.html'">
-⬅ Back
+<div class="back" onclick="window.location='index.html'">
+⬅
 </div>
 
-<div>My Orders</div>
+My Orders
 
 </header>
 
-<div class="container" id="orders"></div>
+<div class="container">
+
+<div id="orders" class="loading">
+Loading Orders...
+</div>
+
+</div>
 
 <script>
 
 const auth = firebase.auth()
 const db = firebase.firestore()
 
+/* LOGIN CHECK */
+
 auth.onAuthStateChanged(user=>{
 
 if(!user){
-window.location="index.html"
+
+window.location="login.html"
+
 return
+
 }
 
+loadOrders(user)
+
+})
+
+/* LOAD ORDERS */
+
+function loadOrders(user){
+
 db.collection("orders")
+
 .where("userEmail","==",user.email.toLowerCase())
+
+.orderBy("created","desc")
+
 .onSnapshot(snapshot=>{
+
+const box=document.getElementById("orders")
+
+if(snapshot.empty){
+
+box.innerHTML='<div class="empty">No Orders Yet</div>'
+
+return
+
+}
 
 let html=""
 
@@ -124,13 +205,13 @@ let o=doc.data()
 
 let percent=10
 
-if(o.status=="Packed") percent=40
-if(o.status=="Out for Delivery") percent=75
-if(o.status=="Delivered") percent=100
+if(o.status==="Packed") percent=40
+if(o.status==="Out for Delivery") percent=75
+if(o.status==="Delivered") percent=100
 
 let otpBox=""
 
-if(o.status=="Out for Delivery" && o.deliveryOTP){
+if(o.status==="Out for Delivery" && o.deliveryOTP){
 
 otpBox=`
 
@@ -152,11 +233,17 @@ html+=`
 
 <div class="order">
 
-<b>Status:</b> ${o.status}
+<div class="status">
 
-<br>
+Status: ${o.status}
 
-<b>Total:</b> ₹${o.total}
+</div>
+
+<div>
+
+Total: ₹${o.total}
+
+</div>
 
 <div class="time">
 
@@ -171,7 +258,9 @@ ${otpBox}
 <div class="progress" style="width:${percent}%"></div>
 
 <div class="truck" style="left:${percent}%">
+
 🚚
+
 </div>
 
 </div>
@@ -182,11 +271,11 @@ ${otpBox}
 
 })
 
-document.getElementById("orders").innerHTML=html
+box.innerHTML=html
 
 })
 
-})
+}
 
 </script>
 
