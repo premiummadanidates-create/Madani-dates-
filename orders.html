@@ -1,1 +1,278 @@
-orders.html
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>My Orders</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script src="firebase.js"></script>
+
+<style>
+
+/* GLOBAL */
+
+body{
+margin:0;
+font-family:Segoe UI;
+background:#f4f6f8;
+}
+
+/* HEADER */
+
+header{
+background:#0f9d58;
+color:white;
+padding:18px;
+display:flex;
+align-items:center;
+font-size:20px;
+font-weight:600;
+}
+
+.back{
+margin-right:15px;
+cursor:pointer;
+font-size:18px;
+}
+
+/* CONTAINER */
+
+.container{
+max-width:900px;
+margin:auto;
+padding:25px;
+}
+
+/* CARD */
+
+.order{
+background:white;
+padding:22px;
+border-radius:22px;
+margin-bottom:20px;
+box-shadow:0 12px 30px rgba(0,0,0,0.08);
+}
+
+/* STATUS */
+
+.status{
+font-weight:bold;
+margin-bottom:6px;
+}
+
+/* DELIVERY TIME */
+
+.time{
+color:#0f9d58;
+font-weight:bold;
+margin-top:6px;
+}
+
+/* OTP */
+
+.otp{
+background:#fff3cd;
+padding:12px;
+border-radius:12px;
+margin-top:10px;
+font-weight:bold;
+}
+
+/* TRACK BAR */
+
+.track{
+height:8px;
+background:#ddd;
+border-radius:10px;
+margin-top:15px;
+position:relative;
+}
+
+.progress{
+height:100%;
+background:#0f9d58;
+border-radius:10px;
+transition:width .6s;
+}
+
+.truck{
+position:absolute;
+top:-18px;
+font-size:22px;
+}
+
+/* STATES */
+
+.loading{
+text-align:center;
+margin-top:50px;
+font-size:18px;
+color:#777;
+}
+
+.empty{
+text-align:center;
+margin-top:50px;
+color:#666;
+font-size:18px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="back" onclick="window.location='index.html'">
+⬅
+</div>
+
+My Orders
+
+</header>
+
+<div class="container">
+
+<div id="orders" class="loading">
+Checking login...
+</div>
+
+</div>
+
+<script>
+
+const auth = firebase.auth()
+const db = firebase.firestore()
+
+const box=document.getElementById("orders")
+
+/* AUTH CHECK */
+
+auth.onAuthStateChanged(user=>{
+
+if(!user){
+
+box.innerHTML="Redirecting to login..."
+
+setTimeout(()=>{
+window.location="login.html"
+},800)
+
+return
+
+}
+
+/* LOAD ORDERS */
+
+loadOrders(user.email.toLowerCase())
+
+})
+
+function loadOrders(email){
+
+box.innerHTML="Loading orders..."
+
+db.collection("orders")
+.where("userEmail","==",email)
+.orderBy("created","desc")
+.get()
+.then(snapshot=>{
+
+if(snapshot.empty){
+
+box.innerHTML='<div class="empty">No Orders Yet</div>'
+return
+
+}
+
+let html=""
+
+snapshot.forEach(doc=>{
+
+let o=doc.data()
+
+let percent=10
+
+if(o.status==="Packed") percent=40
+if(o.status==="Out for Delivery") percent=75
+if(o.status==="Delivered") percent=100
+
+let otp=""
+
+if(o.status==="Out for Delivery" && o.deliveryOTP){
+
+otp=`
+
+<div class="otp">
+
+Delivery OTP: ${o.deliveryOTP}
+
+<br>
+
+Show this OTP to delivery boy
+
+</div>
+
+`
+
+}
+
+html+=`
+
+<div class="order">
+
+<div class="status">
+
+Status: ${o.status}
+
+</div>
+
+<div>
+
+Total: ₹${o.total}
+
+</div>
+
+<div class="time">
+
+Estimated Delivery: ${o.deliveryTime || "Not set"}
+
+</div>
+
+${otp}
+
+<div class="track">
+
+<div class="progress" style="width:${percent}%"></div>
+
+<div class="truck" style="left:${percent}%">
+
+🚚
+
+</div>
+
+</div>
+
+</div>
+
+`
+
+})
+
+box.innerHTML=html
+
+})
+
+}
+
+</script>
+
+</body>
+</html>
