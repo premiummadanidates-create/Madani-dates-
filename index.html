@@ -37,6 +37,13 @@ font-weight:600;
 color:#0f9d58;
 }
 
+.menu a{
+margin-left:20px;
+text-decoration:none;
+color:#333;
+font-weight:600;
+}
+
 /* HERO */
 
 .hero{
@@ -62,6 +69,11 @@ background:white;
 border-radius:18px;
 padding:18px;
 box-shadow:0 10px 25px rgba(0,0,0,0.08);
+transition:.3s;
+}
+
+.card:hover{
+transform:translateY(-5px);
 }
 
 .card img{
@@ -77,6 +89,8 @@ font-size:18px;
 font-weight:700;
 }
 
+/* ADD BUTTON */
+
 .add{
 background:black;
 color:white;
@@ -86,6 +100,7 @@ width:100%;
 border-radius:10px;
 margin-top:12px;
 cursor:pointer;
+font-weight:600;
 }
 
 /* QTY */
@@ -98,12 +113,28 @@ margin-top:10px;
 }
 
 .qty button{
-width:30px;
-height:30px;
+width:32px;
+height:32px;
 border:none;
 border-radius:50%;
 background:#0f9d58;
 color:white;
+cursor:pointer;
+font-size:16px;
+}
+
+/* CART BUTTON */
+
+.cart-float{
+position:fixed;
+bottom:25px;
+right:25px;
+background:#0f9d58;
+color:white;
+padding:15px 22px;
+border-radius:30px;
+font-weight:600;
+box-shadow:0 8px 25px rgba(0,0,0,0.25);
 cursor:pointer;
 }
 
@@ -116,17 +147,30 @@ cursor:pointer;
 
 <div class="logo">Madani Dates</div>
 
+<div class="menu">
+
+<a href="orders.html">My Orders</a>
+
+</div>
+
 </header>
 
 <div class="hero">
 
 <h2>Premium Quality Dates</h2>
-
 <p>Fresh • Organic • Best Prices</p>
 
 </div>
 
 <div class="products" id="products"></div>
+
+<a href="cart.html">
+
+<div class="cart-float">
+Go To Cart
+</div>
+
+</a>
 
 <script>
 
