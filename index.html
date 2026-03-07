@@ -173,26 +173,34 @@ Go To Cart
 
 </a>
 
-<script>
+<<script>
 
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let currentUser=null
+let currentUser = null;
 
-auth.onAuthStateChanged(user=>{
-currentUser=user
-})
+/* AUTH CHECK */
+
+auth.onAuthStateChanged(user => {
+
+currentUser = user;
+
+loadProducts();
+
+});
 
 /* LOAD PRODUCTS */
 
+function loadProducts(){
+
 db.collection("products").onSnapshot(snapshot=>{
 
-let html=""
+let html="";
 
 snapshot.forEach(doc=>{
 
-let p=doc.data()
+let p=doc.data();
 
 html+=`
 
@@ -215,13 +223,15 @@ Add To Cart
 
 </div>
 
-`
+`;
 
-})
+});
 
-document.getElementById("products").innerHTML=html
+document.getElementById("products").innerHTML=html;
 
-})
+});
+
+}
 
 /* ADD CART */
 
@@ -229,18 +239,20 @@ function addCart(name,price,id){
 
 if(!currentUser){
 
-window.location="login.html"
-return
+window.location="login.html";
+return;
 
 }
 
-let cart=JSON.parse(localStorage.getItem("cart_"+currentUser.email))||[]
+let key = "cart_"+currentUser.email;
 
-let item=cart.find(p=>p.name===name)
+let cart = JSON.parse(localStorage.getItem(key)) || [];
+
+let item = cart.find(p=>p.name===name);
 
 if(item){
 
-item.qty++
+item.qty++;
 
 }else{
 
@@ -248,23 +260,25 @@ cart.push({
 name:name,
 price:price,
 qty:1
-})
+});
 
 }
 
-localStorage.setItem("cart_"+currentUser.email,JSON.stringify(cart))
+localStorage.setItem(key,JSON.stringify(cart));
 
-showQty(name,price,id)
+updateButton(name,price,id);
 
 }
 
-/* SHOW QTY */
+/* UPDATE BUTTON */
 
-function showQty(name,price,id){
+function updateButton(name,price,id){
 
-let cart=JSON.parse(localStorage.getItem("cart_"+currentUser.email))||[]
+let key="cart_"+currentUser.email;
 
-let item=cart.find(p=>p.name===name)
+let cart=JSON.parse(localStorage.getItem(key)) || [];
+
+let item=cart.find(p=>p.name===name);
 
 document.getElementById("btn-"+id).innerHTML=`
 
@@ -278,7 +292,7 @@ document.getElementById("btn-"+id).innerHTML=`
 
 </div>
 
-`
+`;
 
 }
 
@@ -286,15 +300,17 @@ document.getElementById("btn-"+id).innerHTML=`
 
 function changeQty(name,price,newQty,id){
 
-let cart=JSON.parse(localStorage.getItem("cart_"+currentUser.email))||[]
+let key="cart_"+currentUser.email;
 
-let item=cart.find(p=>p.name===name)
+let cart=JSON.parse(localStorage.getItem(key)) || [];
 
-item.qty=newQty
+let item=cart.find(p=>p.name===name);
+
+item.qty=newQty;
 
 if(item.qty<1){
 
-cart=cart.filter(p=>p.name!=name)
+cart=cart.filter(p=>p.name!=name);
 
 document.getElementById("btn-"+id).innerHTML=`
 
@@ -303,19 +319,18 @@ onclick="addCart('${name}',${price},'${id}')">
 Add To Cart
 </button>
 
-`
+`;
 
 }else{
 
-showQty(name,price,id)
+updateButton(name,price,id);
 
 }
 
-localStorage.setItem("cart_"+currentUser.email,JSON.stringify(cart))
+localStorage.setItem(key,JSON.stringify(cart));
 
 }
 
 </script>
-
 </body>
 </html>
