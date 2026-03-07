@@ -21,8 +21,6 @@ font-family:Segoe UI;
 background:#f4f6f8;
 }
 
-/* HEADER */
-
 header{
 background:#0f9d58;
 color:white;
@@ -31,7 +29,11 @@ font-size:20px;
 font-weight:600;
 }
 
-/* LOGIN REQUIRED */
+.hidden{
+display:none;
+}
+
+/* LOGIN SCREEN */
 
 .login-box{
 display:flex;
@@ -53,13 +55,12 @@ cursor:pointer;
 font-size:16px;
 }
 
-/* CONTAINER */
+/* CART */
 
 .container{
 max-width:900px;
 margin:auto;
 padding:25px;
-display:none;
 }
 
 .card{
@@ -83,11 +84,6 @@ border:none;
 border-radius:50%;
 background:black;
 color:white;
-cursor:pointer;
-}
-
-.remove{
-color:red;
 cursor:pointer;
 }
 
@@ -120,8 +116,6 @@ cursor:pointer;
 .send{background:#2196f3;color:white}
 .verify{background:#4caf50;color:white}
 .place{background:black;color:white}
-
-/* MODALS */
 
 .modal{
 position:fixed;
@@ -161,7 +155,9 @@ cursor:pointer;
 
 <!-- LOGIN REQUIRED -->
 
-<div class="login-box" id="loginRequired">
+<div id="loginScreen" class="hidden">
+
+<div class="login-box">
 
 <h2>Please Login First</h2>
 
@@ -176,10 +172,14 @@ Login
 
 </div>
 
+</div>
 
-<!-- REAL CART -->
 
-<div class="container" id="cartContainer">
+<!-- CART -->
+
+<div id="cartScreen" class="hidden">
+
+<div class="container">
 
 <div id="cartBox"></div>
 
@@ -204,6 +204,8 @@ Login
 
 </div>
 
+</div>
+
 
 <!-- CONFIRM -->
 
@@ -212,8 +214,6 @@ Login
 <div class="modal-box">
 
 <h3>Confirm Order</h3>
-
-<p>Are you sure?</p>
 
 <button onclick="openPayment()">Yes</button>
 
@@ -260,6 +260,7 @@ const db=firebase.firestore()
 
 let cart=JSON.parse(localStorage.getItem("cart"))||[]
 let total=0
+
 let generatedOTP=""
 let verified=false
 
@@ -270,15 +271,17 @@ auth.onAuthStateChanged(user=>{
 
 if(user){
 
-document.getElementById("loginRequired").style.display="none"
-document.getElementById("cartContainer").style.display="block"
+document.getElementById("cartScreen").classList.remove("hidden")
 
 renderCart()
+
+}else{
+
+document.getElementById("loginScreen").classList.remove("hidden")
 
 }
 
 })
-
 
 
 /* CART */
@@ -298,8 +301,11 @@ box.innerHTML+=`
 <div class="card">
 
 <div class="row">
+
 <strong>${item.name}</strong>
+
 ₹${item.price*item.qty}
+
 </div>
 
 <div class="row">
@@ -311,13 +317,6 @@ box.innerHTML+=`
 ${item.qty}
 
 <button onclick="changeQty(${i},1)">+</button>
-
-</div>
-
-<div class="remove"
-onclick="removeItem(${i})">
-
-Remove
 
 </div>
 
@@ -348,17 +347,6 @@ renderCart()
 
 
 
-function removeItem(i){
-
-cart.splice(i,1)
-
-saveCart()
-renderCart()
-
-}
-
-
-
 function saveCart(){
 
 localStorage.setItem("cart",JSON.stringify(cart))
@@ -371,7 +359,7 @@ localStorage.setItem("cart",JSON.stringify(cart))
 
 function sendOTP(){
 
-let email=document.getElementById("email").value.trim()
+let email=document.getElementById("email").value
 
 generatedOTP=Math.floor(100000+Math.random()*900000)
 
@@ -380,7 +368,9 @@ emailjs.send("madani_dates","template_w9iemq6",{
 otp:generatedOTP,
 to_email:email
 
-}).then(()=>{
+})
+
+.then(()=>{
 
 alert("OTP sent to email")
 
@@ -424,15 +414,11 @@ document.getElementById("confirmModal").style.display="flex"
 
 }
 
-
-
 function closeConfirm(){
 
 document.getElementById("confirmModal").style.display="none"
 
 }
-
-
 
 function openPayment(){
 
@@ -440,7 +426,6 @@ document.getElementById("confirmModal").style.display="none"
 document.getElementById("paymentModal").style.display="flex"
 
 }
-
 
 
 /* ORDER */
