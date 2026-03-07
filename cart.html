@@ -29,35 +29,32 @@ font-size:20px;
 font-weight:600;
 }
 
-.hidden{
-display:none;
-}
-
 /* LOGIN SCREEN */
 
-.login-box{
+.login-screen{
+display:none;
+height:80vh;
 display:flex;
 flex-direction:column;
-justify-content:center;
 align-items:center;
-height:80vh;
+justify-content:center;
 text-align:center;
 }
 
 .login-btn{
 background:#0f9d58;
 color:white;
-padding:12px 25px;
 border:none;
+padding:12px 25px;
 border-radius:10px;
-margin-top:15px;
 cursor:pointer;
-font-size:16px;
+margin-top:15px;
 }
 
 /* CART */
 
-.container{
+.cart-container{
+display:none;
 max-width:900px;
 margin:auto;
 padding:25px;
@@ -117,6 +114,8 @@ cursor:pointer;
 .verify{background:#4caf50;color:white}
 .place{background:black;color:white}
 
+/* MODALS */
+
 .modal{
 position:fixed;
 inset:0;
@@ -155,9 +154,7 @@ cursor:pointer;
 
 <!-- LOGIN REQUIRED -->
 
-<div id="loginScreen" class="hidden">
-
-<div class="login-box">
+<div id="loginScreen" class="login-screen">
 
 <h2>Please Login First</h2>
 
@@ -172,14 +169,10 @@ Login
 
 </div>
 
-</div>
-
 
 <!-- CART -->
 
-<div id="cartScreen" class="hidden">
-
-<div class="container">
+<div id="cartScreen" class="cart-container">
 
 <div id="cartBox"></div>
 
@@ -204,8 +197,6 @@ Login
 
 </div>
 
-</div>
-
 
 <!-- CONFIRM -->
 
@@ -214,6 +205,8 @@ Login
 <div class="modal-box">
 
 <h3>Confirm Order</h3>
+
+<p>Are you sure?</p>
 
 <button onclick="openPayment()">Yes</button>
 
@@ -255,34 +248,33 @@ Online On Delivery
 
 emailjs.init("4zPe-PgOyx0M15xLm")
 
-const auth=firebase.auth()
-const db=firebase.firestore()
+const auth = firebase.auth()
+const db = firebase.firestore()
 
-let cart=JSON.parse(localStorage.getItem("cart"))||[]
-let total=0
+let cart = JSON.parse(localStorage.getItem("cart")) || []
+let total = 0
+let generatedOTP = ""
+let verified = false
 
-let generatedOTP=""
-let verified=false
-
-
-/* LOGIN CHECK */
+/* AUTH CHECK */
 
 auth.onAuthStateChanged(user=>{
 
 if(user){
 
-document.getElementById("cartScreen").classList.remove("hidden")
+document.getElementById("loginScreen").style.display="none"
+document.getElementById("cartScreen").style.display="block"
 
 renderCart()
 
 }else{
 
-document.getElementById("loginScreen").classList.remove("hidden")
+document.getElementById("loginScreen").style.display="flex"
+document.getElementById("cartScreen").style.display="none"
 
 }
 
 })
-
 
 /* CART */
 
@@ -301,11 +293,8 @@ box.innerHTML+=`
 <div class="card">
 
 <div class="row">
-
 <strong>${item.name}</strong>
-
 ₹${item.price*item.qty}
-
 </div>
 
 <div class="row">
@@ -313,9 +302,7 @@ box.innerHTML+=`
 <div class="qty">
 
 <button onclick="changeQty(${i},-1)">-</button>
-
 ${item.qty}
-
 <button onclick="changeQty(${i},1)">+</button>
 
 </div>
@@ -332,8 +319,6 @@ document.getElementById("total").innerText=total
 
 }
 
-
-
 function changeQty(i,v){
 
 cart[i].qty+=v
@@ -345,15 +330,11 @@ renderCart()
 
 }
 
-
-
 function saveCart(){
 
 localStorage.setItem("cart",JSON.stringify(cart))
 
 }
-
-
 
 /* OTP */
 
@@ -368,17 +349,13 @@ emailjs.send("madani_dates","template_w9iemq6",{
 otp:generatedOTP,
 to_email:email
 
-})
-
-.then(()=>{
+}).then(()=>{
 
 alert("OTP sent to email")
 
 })
 
 }
-
-
 
 function verifyOTP(){
 
@@ -396,8 +373,6 @@ alert("Wrong OTP")
 }
 
 }
-
-
 
 /* CONFIRM */
 
@@ -426,7 +401,6 @@ document.getElementById("confirmModal").style.display="none"
 document.getElementById("paymentModal").style.display="flex"
 
 }
-
 
 /* ORDER */
 
