@@ -12,6 +12,8 @@
 
 <script src="firebase.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
 <style>
 
 body{
@@ -59,8 +61,7 @@ cursor:pointer
 
 .remove{
 color:#d32f2f;
-cursor:pointer;
-font-size:14px
+cursor:pointer
 }
 
 .summary{
@@ -79,14 +80,21 @@ border-radius:10px;
 border:1px solid #ddd
 }
 
+button{
+padding:12px;
+border:none;
+border-radius:10px;
+margin-top:10px;
+cursor:pointer
+}
+
+.send{background:#2196f3;color:white;width:100%}
+.verify{background:#4caf50;color:white;width:100%}
+
 .place{
 background:black;
 color:white;
-padding:14px;
-border-radius:15px;
-text-align:center;
-margin-top:20px;
-cursor:pointer
+width:100%
 }
 
 .modal{
@@ -106,25 +114,9 @@ width:320px;
 text-align:center
 }
 
-.modal-btn{
-margin:10px;
-padding:10px 20px;
-border:none;
-border-radius:15px;
-cursor:pointer
-}
-
-.yes{background:#0f9d58;color:white}
-.no{background:#ddd}
-
 .pay-btn{
-display:block;
 width:100%;
-margin-top:10px;
-padding:12px;
-border:none;
-border-radius:12px;
-cursor:pointer
+margin-top:10px
 }
 
 .cod{background:#4caf50;color:white}
@@ -142,75 +134,102 @@ cursor:pointer
 <div id="cartBox"></div>
 
 <div class="summary">
+
 <h3>Total: ₹<span id="total">0</span></h3>
 
 <input id="name" placeholder="Full Name">
-<input id="phone" placeholder="Phone Number">
-<textarea id="address" rows="3" placeholder="Full Address"></textarea>
+<input id="phone" placeholder="Phone">
+<textarea id="address" placeholder="Address"></textarea>
+
+<button class="send" onclick="sendOTP()">Send OTP</button>
 
 <input id="otpInput" placeholder="Enter OTP">
-<button onclick="sendOTP()">Send OTP</button>
 
-<div class="place" onclick="openConfirm()">Place Order</div>
+<button class="verify" onclick="verifyOTP()">Verify OTP</button>
+
+<button class="place" onclick="openConfirm()">Place Order</button>
 
 </div>
+
 </div>
 
 <div class="modal" id="confirmModal">
+
 <div class="modal-box">
-<h3>Confirm Purchase</h3>
-<p>Are you sure?</p>
-<button class="modal-btn yes" onclick="openPayment()">Yes</button>
-<button class="modal-btn no" onclick="closeConfirm()">No</button>
+
+<h3>Confirm Order</h3>
+
+<button onclick="openPayment()">Confirm</button>
+<button onclick="closeConfirm()">Cancel</button>
+
 </div>
+
 </div>
 
 <div class="modal" id="paymentModal">
+
 <div class="modal-box">
+
 <h3>Select Payment</h3>
+
 <button class="pay-btn cod" onclick="placeOrder('COD')">Cash On Delivery</button>
+
 <button class="pay-btn online" onclick="placeOrder('Online on delivery')">Online on delivery</button>
+
 </div>
+
 </div>
 
 <script>
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+emailjs.init("4zPe-PgOyx0M15xLm")
 
-let cart=JSON.parse(localStorage.getItem("cart"))||[];
-let total=0;
-let otp="";
+const auth=firebase.auth()
+const db=firebase.firestore()
+
+let cart=JSON.parse(localStorage.getItem("cart"))||[]
+let total=0
+let otp=""
+let verified=false
 
 auth.onAuthStateChanged(user=>{
-if(!user) window.location="login.html";
-});
+if(!user) window.location="login.html"
+})
 
 function renderCart(){
 
-total=0;
-let box=document.getElementById("cartBox");
-box.innerHTML="";
+total=0
+
+let box=document.getElementById("cartBox")
+
+box.innerHTML=""
 
 cart.forEach((item,i)=>{
 
-total+=item.price*item.qty;
+total+=item.price*item.qty
 
 box.innerHTML+=`
 
 <div class="card">
 
 <div class="row">
-<strong>${item.name}</strong>
+
+<b>${item.name}</b>
+
 ₹${item.price*item.qty}
+
 </div>
 
-<div class="row" style="margin-top:10px">
+<div class="row">
 
 <div>
+
 <button class="qty-btn" onclick="changeQty(${i},-1)">-</button>
+
 ${item.qty}
+
 <button class="qty-btn" onclick="changeQty(${i},1)">+</button>
+
 </div>
 
 <div class="remove" onclick="removeItem(${i})">Remove</div>
@@ -221,97 +240,137 @@ ${item.qty}
 
 `
 
-});
+})
 
-document.getElementById("total").innerText=total;
+document.getElementById("total").innerText=total
 
 }
 
 function changeQty(i,v){
 
-cart[i].qty+=v;
-if(cart[i].qty<=1) cart[i].qty=1;
+cart[i].qty+=v
 
-localStorage.setItem("cart",JSON.stringify(cart));
-renderCart();
+if(cart[i].qty<1) cart[i].qty=1
+
+localStorage.setItem("cart",JSON.stringify(cart))
+
+renderCart()
 
 }
 
 function removeItem(i){
 
-cart.splice(i,1);
-localStorage.setItem("cart",JSON.stringify(cart));
-renderCart();
+cart.splice(i,1)
+
+localStorage.setItem("cart",JSON.stringify(cart))
+
+renderCart()
 
 }
 
 function sendOTP(){
 
-otp=Math.floor(100000+Math.random()*900000);
-alert("OTP: "+otp);
+const user=auth.currentUser
+
+otp=Math.floor(100000+Math.random()*900000)
+
+emailjs.send("madani_dates","template_otp",{
+
+to_email:user.email,
+
+otp:otp
+
+}).then(()=>{
+
+alert("OTP sent to your email")
+
+})
+
+}
+
+function verifyOTP(){
+
+let input=document.getElementById("otpInput").value
+
+if(input==otp){
+
+verified=true
+alert("OTP verified")
+
+}else{
+
+alert("Wrong OTP")
+
+}
 
 }
 
 function openConfirm(){
 
-let name=document.getElementById("name").value.trim();
-let phone=document.getElementById("phone").value.trim();
-let address=document.getElementById("address").value.trim();
-let userOTP=document.getElementById("otpInput").value;
+if(!verified){
 
-if(userOTP!=otp){
-alert("Wrong OTP");
-return;
+alert("Verify OTP first")
+return
+
 }
 
-if(!name||!phone||!address){
-alert("Fill all details");
-return;
-}
-
-document.getElementById("confirmModal").style.display="flex";
+document.getElementById("confirmModal").style.display="flex"
 
 }
 
 function closeConfirm(){
-document.getElementById("confirmModal").style.display="none";
+
+document.getElementById("confirmModal").style.display="none"
+
 }
 
 function openPayment(){
 
-document.getElementById("confirmModal").style.display="none";
-document.getElementById("paymentModal").style.display="flex";
+document.getElementById("confirmModal").style.display="none"
+
+document.getElementById("paymentModal").style.display="flex"
 
 }
 
 function placeOrder(method){
 
-const user=auth.currentUser;
+const user=auth.currentUser
 
-let name=document.getElementById("name").value;
-let phone=document.getElementById("phone").value;
-let address=document.getElementById("address").value;
+let name=document.getElementById("name").value
+let phone=document.getElementById("phone").value
+let address=document.getElementById("address").value
 
 db.collection("orders").add({
 
 items:cart,
+
 total:total,
+
 payment:method,
-userEmail:user.email,
+
 status:"Pending",
-customer:{name,phone,address},
+
+userEmail:user.email,
+
+customer:{
+name:name,
+phone:phone,
+address:address
+},
+
 created:firebase.firestore.FieldValue.serverTimestamp()
 
 }).then(()=>{
 
-localStorage.removeItem("cart");
-window.location="success.html";
+localStorage.removeItem("cart")
 
-});
+window.location="success.html"
+
+})
 
 }
 
-renderCart();
+renderCart()
 
 </script>
 
