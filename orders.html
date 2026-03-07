@@ -39,7 +39,48 @@ padding:20px;
 border-radius:20px;
 margin-bottom:20px;
 box-shadow:0 10px 25px rgba(0,0,0,0.08);
-cursor:pointer
+cursor:pointer;
+transition:.2s
+}
+
+.order:hover{
+transform:translateY(-3px)
+}
+
+.status{
+font-weight:bold;
+margin-bottom:5px
+}
+
+.track{
+height:8px;
+background:#ddd;
+border-radius:10px;
+margin-top:15px;
+position:relative
+}
+
+.progress{
+height:100%;
+background:#0f9d58;
+border-radius:10px;
+transition:width 1s
+}
+
+.truck{
+position:absolute;
+top:-18px;
+font-size:22px;
+transition:left 1s
+}
+
+.otp{
+background:#fff3cd;
+padding:12px;
+border-radius:10px;
+margin-top:12px;
+font-weight:bold;
+text-align:center
 }
 
 .modal{
@@ -56,6 +97,17 @@ background:white;
 padding:25px;
 border-radius:20px;
 width:320px
+}
+
+button{
+padding:10px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+margin-top:10px;
+width:100%;
+background:black;
+color:white
 }
 
 </style>
@@ -94,19 +146,49 @@ snapshot.forEach(doc=>{
 
 let o=doc.data();
 
+let percent=10;
+
+if(o.status=="Packed") percent=40;
+if(o.status=="Out for Delivery") percent=75;
+if(o.status=="Delivered") percent=100;
+
+let otpBox="";
+
+if(o.status=="Out for Delivery" && o.deliveryOTP){
+
+otpBox=`
+<div class="otp">
+Delivery OTP: ${o.deliveryOTP}
+<br>
+Show this OTP to delivery boy
+</div>
+`;
+
+}
+
 html+=`
 
 <div class="order" onclick="showDetails('${doc.id}')">
 
-<b>Status:</b> ${o.status}
-<br>
-<b>Total:</b> ₹${o.total}
-<br>
-<b>Payment:</b> ${o.payment}
+<div class="status">Status: ${o.status}</div>
+
+Total: ₹${o.total}<br>
+
+Payment: ${o.payment}
+
+${otpBox}
+
+<div class="track">
+
+<div class="progress" style="width:${percent}%"></div>
+
+<div class="truck" style="left:${percent}%">🚚</div>
 
 </div>
 
-`
+</div>
+
+`;
 
 });
 
