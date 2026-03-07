@@ -4,10 +4,12 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
 <title>Madani Dates</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script src="firebase.js"></script>
 
@@ -19,37 +21,140 @@ font-family:Segoe UI;
 background:#f4f6f8;
 }
 
+/* HEADER */
+
 header{
-background:#0f9d58;
-color:white;
-padding:20px;
+background:white;
 display:flex;
 justify-content:space-between;
+align-items:center;
+padding:15px 25px;
+box-shadow:0 3px 10px rgba(0,0,0,0.08);
 }
+
+.logo{
+font-size:22px;
+font-weight:600;
+color:#0f9d58;
+}
+
+.menu a{
+margin-left:18px;
+text-decoration:none;
+color:#333;
+font-weight:600;
+}
+
+/* HERO */
+
+.hero{
+padding:80px 20px;
+background:linear-gradient(135deg,#0f9d58,#0b5c2e);
+color:white;
+text-align:center;
+border-bottom-left-radius:60px;
+border-bottom-right-radius:60px;
+}
+
+/* PRODUCTS */
 
 .products{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:20px;
-padding:30px;
+grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+gap:25px;
+padding:40px;
 }
 
 .card{
 background:white;
-padding:15px;
-border-radius:15px;
-box-shadow:0 5px 20px rgba(0,0,0,0.08);
-text-align:center;
+border-radius:18px;
+padding:18px;
+box-shadow:0 10px 25px rgba(0,0,0,0.08);
+transition:.3s;
+position:relative;
 }
 
-button{
+.card:hover{
+transform:translateY(-6px);
+}
+
+.card img{
+width:100%;
+height:180px;
+object-fit:cover;
+border-radius:12px;
+}
+
+/* PRICE */
+
+.price{
+color:#0f9d58;
+font-size:18px;
+font-weight:700;
+margin-top:5px;
+}
+
+/* BUTTON */
+
+.add{
 background:black;
 color:white;
-padding:10px;
 border:none;
-border-radius:8px;
+padding:12px;
+width:100%;
+border-radius:10px;
+margin-top:12px;
 cursor:pointer;
+font-weight:600;
+}
+
+/* QTY */
+
+.qty{
+display:flex;
+justify-content:center;
+gap:10px;
 margin-top:10px;
+}
+
+.qty button{
+width:32px;
+height:32px;
+border:none;
+border-radius:50%;
+background:#0f9d58;
+color:white;
+cursor:pointer;
+font-size:16px;
+}
+
+/* CART FLOAT */
+
+.cart-float{
+position:fixed;
+bottom:25px;
+right:25px;
+background:#0f9d58;
+color:white;
+padding:15px 22px;
+border-radius:30px;
+font-weight:600;
+box-shadow:0 8px 25px rgba(0,0,0,0.25);
+cursor:pointer;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:768px){
+
+.hero{
+padding:60px 15px;
+}
+
+.products{
+padding:25px;
+}
+
 }
 
 </style>
@@ -60,51 +165,95 @@ margin-top:10px;
 
 <header>
 
-<h2>Madani Dates</h2>
+<div class="logo">Madani Dates</div>
 
-<a href="cart.html">Cart</a>
+<div class="menu">
+
+<a href="myorders.html">My Orders</a>
+
+</div>
 
 </header>
 
-<div class="products">
+<div class="hero">
 
-<div class="card">
+<h2>Premium Quality Dates</h2>
 
-<h3>Ajwa Dates</h3>
-
-<p>₹500</p>
-
-<button onclick="addCart('Ajwa Dates',500)">
-Add To Cart
-</button>
+<p>Fresh • Organic • Best Prices</p>
 
 </div>
 
-<div class="card">
+<div class="products" id="products"></div>
 
-<h3>Mabroom Dates</h3>
+<a href="cart.html">
 
-<p>₹650</p>
+<div class="cart-float">
 
-<button onclick="addCart('Mabroom Dates',650)">
-Add To Cart
-</button>
+Go To Cart
 
 </div>
 
-</div>
+</a>
 
 <script>
 
 const auth=firebase.auth()
+const db=firebase.firestore()
 
-function addCart(name,price){
+let user=null
 
-let user=auth.currentUser
+auth.onAuthStateChanged(u=>{
+user=u
+})
+
+/* LOAD PRODUCTS */
+
+db.collection("products").onSnapshot(snapshot=>{
+
+let html=""
+
+snapshot.forEach(doc=>{
+
+let p=doc.data()
+
+html+=`
+
+<div class="card">
+
+<img src="${p.image}">
+
+<h3>${p.name}</h3>
+
+<div class="price">₹${p.price}</div>
+
+<div id="btn-${doc.id}">
+
+<button class="add"
+
+onclick="addCart('${p.name}',${p.price},'${doc.id}')">
+
+Add To Cart
+
+</button>
+
+</div>
+
+</div>
+
+`
+
+})
+
+document.getElementById("products").innerHTML=html
+
+})
+
+/* ADD CART */
+
+function addCart(name,price,id){
 
 if(!user){
 
-alert("Please login first")
 window.location="login.html"
 return
 
@@ -117,14 +266,86 @@ let cart=JSON.parse(localStorage.getItem("cart_"+email))||[]
 let item=cart.find(p=>p.name==name)
 
 if(item){
+
 item.qty++
+
 }else{
-cart.push({name,price,qty:1})
+
+cart.push({
+name:name,
+price:price,
+qty:1
+})
+
 }
 
 localStorage.setItem("cart_"+email,JSON.stringify(cart))
 
-alert("Added to cart")
+showQty(name,price,id)
+
+}
+
+/* SHOW QTY */
+
+function showQty(name,price,id){
+
+let email=user.email
+
+let cart=JSON.parse(localStorage.getItem("cart_"+email))||[]
+
+let item=cart.find(p=>p.name==name)
+
+document.getElementById("btn-"+id).innerHTML=`
+
+<div class="qty">
+
+<button onclick="changeQty('${name}',${price},${item.qty-1},'${id}')">-</button>
+
+${item.qty}
+
+<button onclick="changeQty('${name}',${price},${item.qty+1},'${id}')">+</button>
+
+</div>
+
+`
+
+}
+
+/* CHANGE QTY */
+
+function changeQty(name,price,newQty,id){
+
+let email=user.email
+
+let cart=JSON.parse(localStorage.getItem("cart_"+email))||[]
+
+let item=cart.find(p=>p.name==name)
+
+item.qty=newQty
+
+if(item.qty<1){
+
+cart=cart.filter(p=>p.name!=name)
+
+document.getElementById("btn-"+id).innerHTML=`
+
+<button class="add"
+
+onclick="addCart('${name}',${price},'${id}')">
+
+Add To Cart
+
+</button>
+
+`
+
+}else{
+
+showQty(name,price,id)
+
+}
+
+localStorage.setItem("cart_"+email,JSON.stringify(cart))
 
 }
 
