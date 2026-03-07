@@ -3,9 +3,8 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-
 <title>Madani Dates</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -38,13 +37,6 @@ font-weight:600;
 color:#0f9d58;
 }
 
-.menu a{
-margin-left:18px;
-text-decoration:none;
-color:#333;
-font-weight:600;
-}
-
 /* HERO */
 
 .hero{
@@ -70,12 +62,6 @@ background:white;
 border-radius:18px;
 padding:18px;
 box-shadow:0 10px 25px rgba(0,0,0,0.08);
-transition:.3s;
-position:relative;
-}
-
-.card:hover{
-transform:translateY(-6px);
 }
 
 .card img{
@@ -85,16 +71,11 @@ object-fit:cover;
 border-radius:12px;
 }
 
-/* PRICE */
-
 .price{
 color:#0f9d58;
 font-size:18px;
 font-weight:700;
-margin-top:5px;
 }
-
-/* BUTTON */
 
 .add{
 background:black;
@@ -105,7 +86,6 @@ width:100%;
 border-radius:10px;
 margin-top:12px;
 cursor:pointer;
-font-weight:600;
 }
 
 /* QTY */
@@ -118,47 +98,16 @@ margin-top:10px;
 }
 
 .qty button{
-width:32px;
-height:32px;
+width:30px;
+height:30px;
 border:none;
 border-radius:50%;
 background:#0f9d58;
 color:white;
 cursor:pointer;
-font-size:16px;
-}
-
-/* CART FLOAT */
-
-.cart-float{
-position:fixed;
-bottom:25px;
-right:25px;
-background:#0f9d58;
-color:white;
-padding:15px 22px;
-border-radius:30px;
-font-weight:600;
-box-shadow:0 8px 25px rgba(0,0,0,0.25);
-cursor:pointer;
-}
-
-/* RESPONSIVE */
-
-@media(max-width:768px){
-
-.hero{
-padding:60px 15px;
-}
-
-.products{
-padding:25px;
-}
-
 }
 
 </style>
-
 </head>
 
 <body>
@@ -166,12 +115,6 @@ padding:25px;
 <header>
 
 <div class="logo">Madani Dates</div>
-
-<div class="menu">
-
-<a href="myorders.html">My Orders</a>
-
-</div>
 
 </header>
 
@@ -185,26 +128,10 @@ padding:25px;
 
 <div class="products" id="products"></div>
 
-<a href="cart.html">
-
-<div class="cart-float">
-
-Go To Cart
-
-</div>
-
-</a>
-
 <script>
 
-const auth=firebase.auth()
-const db=firebase.firestore()
-
-let user=null
-
-auth.onAuthStateChanged(u=>{
-user=u
-})
+const auth = firebase.auth();
+const db = firebase.firestore();
 
 /* LOAD PRODUCTS */
 
@@ -252,34 +179,31 @@ document.getElementById("products").innerHTML=html
 
 function addCart(name,price,id){
 
+const user = firebase.auth().currentUser;
+
 if(!user){
 
-window.location="login.html"
-return
+window.location="login.html";
+
+return;
 
 }
 
-let email=user.email
+let cart = JSON.parse(localStorage.getItem("cart_"+user.email)) || [];
 
-let cart=JSON.parse(localStorage.getItem("cart_"+email))||[]
-
-let item=cart.find(p=>p.name==name)
+let item = cart.find(p=>p.name===name);
 
 if(item){
-
-item.qty++
-
+item.qty++;
 }else{
-
 cart.push({
 name:name,
 price:price,
 qty:1
-})
-
+});
 }
 
-localStorage.setItem("cart_"+email,JSON.stringify(cart))
+localStorage.setItem("cart_"+user.email,JSON.stringify(cart));
 
 showQty(name,price,id)
 
@@ -289,11 +213,11 @@ showQty(name,price,id)
 
 function showQty(name,price,id){
 
-let email=user.email
+const user = firebase.auth().currentUser;
 
-let cart=JSON.parse(localStorage.getItem("cart_"+email))||[]
+let cart = JSON.parse(localStorage.getItem("cart_"+user.email)) || [];
 
-let item=cart.find(p=>p.name==name)
+let item = cart.find(p=>p.name===name)
 
 document.getElementById("btn-"+id).innerHTML=`
 
@@ -315,11 +239,11 @@ ${item.qty}
 
 function changeQty(name,price,newQty,id){
 
-let email=user.email
+const user = firebase.auth().currentUser;
 
-let cart=JSON.parse(localStorage.getItem("cart_"+email))||[]
+let cart = JSON.parse(localStorage.getItem("cart_"+user.email)) || [];
 
-let item=cart.find(p=>p.name==name)
+let item = cart.find(p=>p.name===name)
 
 item.qty=newQty
 
@@ -345,7 +269,7 @@ showQty(name,price,id)
 
 }
 
-localStorage.setItem("cart_"+email,JSON.stringify(cart))
+localStorage.setItem("cart_"+user.email,JSON.stringify(cart))
 
 }
 
