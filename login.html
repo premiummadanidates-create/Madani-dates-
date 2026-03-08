@@ -1,27 +1,80 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Login</title>
+
+<meta charset="UTF-8">
+<title>Login - Madani Dates</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+<script src="firebase.js"></script>
 
 <style>
 
 body{
-font-family: Arial;
-background:#111;
+margin:0;
+height:100vh;
 display:flex;
 justify-content:center;
 align-items:center;
-height:100vh;
+font-family:'Segoe UI',sans-serif;
+background:linear-gradient(135deg,#0f9d58,#0a3d1f);
 }
 
-button{
-padding:15px 30px;
-font-size:18px;
-border:none;
-border-radius:8px;
-background:#4285F4;
+.login-box{
+background:white;
+padding:40px;
+border-radius:25px;
+width:320px;
+text-align:center;
+box-shadow:0 20px 40px rgba(0,0,0,0.15);
+}
+
+.login-box h2{
+margin:0 0 10px;
+color:#0f9d58;
+}
+
+.login-box p{
+font-size:14px;
+opacity:0.7;
+margin-bottom:25px;
+}
+
+.google-btn{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+background:black;
 color:white;
+border:none;
+padding:12px;
+width:100%;
+border-radius:30px;
 cursor:pointer;
+transition:0.3s;
+}
+
+.google-btn:hover{
+background:#0f9d58;
+}
+
+.logo-circle{
+width:70px;
+height:70px;
+border-radius:50%;
+background:#0f9d58;
+margin:auto;
+margin-bottom:20px;
+display:flex;
+justify-content:center;
+align-items:center;
+color:white;
+font-size:26px;
+font-weight:bold;
 }
 
 </style>
@@ -29,29 +82,63 @@ cursor:pointer;
 
 <body>
 
-<button id="googleLogin">Login with Google</button>
+<div class="login-box">
 
-<script type="module">
+<div class="logo-circle">MD</div>
 
-import { auth, provider } from "./firebase.js";
-import { signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+<h2>Madani Dates</h2>
 
-const btn = document.getElementById("googleLogin");
+<p>Premium Quality Dates Delivered Fresh</p>
 
-btn.addEventListener("click", () => {
+<button class="google-btn" onclick="login()">
+Sign in with Google
+</button>
 
-signInWithPopup(auth, provider)
+</div>
 
-.then((result)=>{
+<script>
 
-// login success
-window.location.href = "index.html";
+const auth = firebase.auth();
+
+/* Already logged in → go home */
+
+auth.onAuthStateChanged(user=>{
+
+if(user){
+
+window.location.replace("index.html");
+
+}
+
+});
+
+/* LOGIN */
+
+function login(){
+
+const provider = new firebase.auth.GoogleAuthProvider();
+
+/* Redirect login (works on phone also) */
+
+auth.signInWithRedirect(provider);
+
+}
+
+/* Handle redirect result */
+
+auth.getRedirectResult()
+.then(result=>{
+
+if(result.user){
+
+window.location.replace("index.html");
+
+}
 
 })
+.catch(err=>{
 
-.catch((error)=>{
-alert(error.message);
-});
+console.log(err);
 
 });
 
