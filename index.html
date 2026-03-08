@@ -43,7 +43,7 @@ font-weight:600;
 }
 
 .hero{
-padding:90px 20px;
+padding:80px 20px;
 background:linear-gradient(135deg,#0f9d58,#0b5c2e);
 color:white;
 text-align:center;
@@ -53,41 +53,23 @@ border-bottom-right-radius:60px;
 
 .products{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
 gap:25px;
 padding:40px;
 }
 
 .card{
 background:white;
-border-radius:20px;
+border-radius:18px;
 padding:18px;
 box-shadow:0 10px 25px rgba(0,0,0,0.08);
-position:relative;
 }
 
 .card img{
 width:100%;
 height:180px;
 object-fit:cover;
-border-radius:15px;
-}
-
-.discount{
-position:absolute;
-top:12px;
-left:12px;
-background:red;
-color:white;
-font-size:12px;
-padding:5px 10px;
-border-radius:15px;
-}
-
-.old{
-text-decoration:line-through;
-color:#888;
-font-size:14px;
+border-radius:12px;
 }
 
 .price{
@@ -96,34 +78,51 @@ font-size:18px;
 font-weight:700;
 }
 
+.old{
+text-decoration:line-through;
+color:#888;
+font-size:14px;
+}
+
+.discount{
+position:absolute;
+background:red;
+color:white;
+font-size:12px;
+padding:5px 10px;
+border-radius:20px;
+margin-top:-10px;
+}
+
 .add{
 background:black;
 color:white;
 border:none;
 padding:12px;
 width:100%;
-border-radius:12px;
+border-radius:10px;
 margin-top:12px;
 cursor:pointer;
+font-weight:600;
 }
 
-.add:disabled{
-background:#ccc;
-cursor:not-allowed;
+.qty{
+display:flex;
+justify-content:center;
+gap:10px;
+margin-top:10px;
+align-items:center;
 }
 
-.stock-stamp{
-position:absolute;
-top:28%;
-left:50%;
-transform:translate(-50%,-50%) rotate(-20deg);
-width:160px;
-opacity:0.95;
-pointer-events:none;
-}
-
-.out-card{
-opacity:0.6;
+.qty button{
+width:32px;
+height:32px;
+border:none;
+border-radius:50%;
+background:#0f9d58;
+color:white;
+cursor:pointer;
+font-size:16px;
 }
 
 .cart-float{
@@ -133,7 +132,7 @@ right:25px;
 background:#0f9d58;
 color:white;
 padding:15px 22px;
-border-radius:35px;
+border-radius:30px;
 font-weight:600;
 box-shadow:0 8px 25px rgba(0,0,0,0.25);
 cursor:pointer;
@@ -147,28 +146,6 @@ padding:3px 7px;
 border-radius:50%;
 margin-left:6px;
 }
-
-.manager{
-margin:40px;
-background:white;
-padding:30px;
-border-radius:18px;
-box-shadow:0 10px 25px rgba(0,0,0,0.08);
-text-align:center;
-}
-
-.manager button{
-padding:12px 20px;
-border:none;
-border-radius:10px;
-margin:8px;
-cursor:pointer;
-font-weight:600;
-}
-
-.call{background:#0f9d58;color:white;}
-.whatsapp{background:#25D366;color:white;}
-.instagram{background:#E1306C;color:white;}
 
 </style>
 </head>
@@ -187,29 +164,13 @@ font-weight:600;
 </header>
 
 <div class="hero">
+
 <h2>Premium Quality Dates</h2>
 <p>Fresh • Organic • Best Prices</p>
+
 </div>
 
 <div class="products" id="products"></div>
-
-<div class="manager">
-
-<h3>Contact Web Manager</h3>
-
-<button class="call" onclick="window.location='tel:+917977212461'">
-📞 Call Web Manager
-</button>
-
-<button class="whatsapp" onclick="window.open('https://wa.me/917977212461')">
-💬 WhatsApp Web Manager
-</button>
-
-<button class="instagram" onclick="window.open('https://www.instagram.com/madanidatesofficial')">
-📷 Instagram
-</button>
-
-</div>
 
 <a href="cart.html">
 <div class="cart-float">
@@ -220,8 +181,8 @@ Go To Cart
 
 <script>
 
-const auth = firebase.auth()
-const db = firebase.firestore()
+const auth=firebase.auth()
+const db=firebase.firestore()
 
 let currentUser=null
 
@@ -233,16 +194,16 @@ let cart=JSON.parse(localStorage.getItem("cart"))||[]
 
 function saveCart(){
 localStorage.setItem("cart",JSON.stringify(cart))
-updateCartCount()
+updateCart()
 }
 
-function updateCartCount(){
+function updateCart(){
 let count=0
 cart.forEach(i=>count+=i.qty)
 document.getElementById("cartCount").innerText=count
 }
 
-function addCart(name,price){
+function addCart(name,price,id){
 
 if(!currentUser){
 window.location="login.html"
@@ -254,22 +215,67 @@ let item=cart.find(p=>p.name===name)
 if(item){
 item.qty++
 }else{
-cart.push({name,price,qty:1})
+cart.push({name:name,price:price,qty:1})
 }
 
 saveCart()
-alert("Added to cart")
+showQty(name,price,id)
+
+}
+
+function showQty(name,price,id){
+
+let item=cart.find(p=>p.name===name)
+
+document.getElementById("btn-"+id).innerHTML=`
+
+<div class="qty">
+
+<button onclick="changeQty('${name}',${price},${item.qty-1},'${id}')">-</button>
+
+<span>${item.qty}</span>
+
+<button onclick="changeQty('${name}',${price},${item.qty+1},'${id}')">+</button>
+
+</div>
+
+`
+
+}
+
+function changeQty(name,price,newQty,id){
+
+let item=cart.find(p=>p.name===name)
+
+item.qty=newQty
+
+if(item.qty<1){
+
+cart=cart.filter(p=>p.name!=name)
+
+document.getElementById("btn-"+id).innerHTML=`
+
+<button class="add"
+onclick="addCart('${name}',${price},'${id}')">
+
+Add To Cart
+
+</button>
+
+`
+
+}else{
+
+showQty(name,price,id)
+
+}
+
+saveCart()
 
 }
 
 function logout(){
-auth.signOut().then(()=>{
-location.reload()
-})
-}
-
-function openProduct(id){
-window.location="product.html?id="+id
+auth.signOut()
 }
 
 db.collection("products").onSnapshot(snapshot=>{
@@ -282,26 +288,28 @@ let p=doc.data()
 
 html+=`
 
-<div class="card ${!p.stock ? 'out-card' : ''}" ${p.stock ? `onclick="openProduct('${doc.id}')"` : ''}>
+<div class="card">
 
-<div class="discount">${p.discount || ''}</div>
+<div class="discount">${p.discount || ""}</div>
 
 <img src="${p.image}">
 
-${!p.stock ? `<img src="images/out-of-stock.png" class="stock-stamp">` : ''}
-
 <h3>${p.name}</h3>
 
-<div class="old">₹${p.oldPrice || ''}</div>
+<div class="old">₹${p.oldPrice || ""}</div>
+
 <div class="price">₹${p.price}</div>
 
-<button class="add"
-${!p.stock ? 'disabled' : ''}
-onclick="event.stopPropagation();addCart('${p.name}',${p.price})">
+<div id="btn-${doc.id}">
 
-${!p.stock ? 'Out Of Stock' : 'Add To Cart'}
+<button class="add"
+onclick="addCart('${p.name}',${p.price},'${doc.id}')">
+
+Add To Cart
 
 </button>
+
+</div>
 
 </div>
 
@@ -313,7 +321,7 @@ document.getElementById("products").innerHTML=html
 
 })
 
-updateCartCount()
+updateCart()
 
 </script>
 
