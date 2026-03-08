@@ -33,12 +33,12 @@ box-shadow:0 3px 10px rgba(0,0,0,0.08);
 
 .logo{
 font-size:22px;
-font-weight:600;
+font-weight:700;
 color:#0f9d58;
 }
 
 .menu a{
-margin-left:18px;
+margin-left:20px;
 text-decoration:none;
 color:#333;
 font-weight:600;
@@ -69,6 +69,11 @@ background:white;
 border-radius:18px;
 padding:18px;
 box-shadow:0 10px 25px rgba(0,0,0,0.08);
+transition:.25s;
+}
+
+.card:hover{
+transform:translateY(-5px);
 }
 
 .card img{
@@ -84,7 +89,7 @@ font-size:18px;
 font-weight:700;
 }
 
-/* ADD BUTTON */
+/* BUTTON */
 
 .add{
 background:black;
@@ -95,27 +100,6 @@ width:100%;
 border-radius:10px;
 margin-top:12px;
 cursor:pointer;
-}
-
-/* QTY */
-
-.qty{
-display:flex;
-justify-content:center;
-align-items:center;
-gap:10px;
-margin-top:10px;
-}
-
-.qty button{
-width:32px;
-height:32px;
-border:none;
-border-radius:50%;
-background:#0f9d58;
-color:white;
-cursor:pointer;
-font-size:18px;
 }
 
 /* CART BUTTON */
@@ -134,6 +118,7 @@ cursor:pointer;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -143,9 +128,7 @@ cursor:pointer;
 <div class="logo">Madani Dates</div>
 
 <div class="menu">
-
 <a href="orders.html">My Orders</a>
-
 </div>
 
 </header>
@@ -172,15 +155,15 @@ Go To Cart
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let currentUser = null;
+let currentUser=null;
 
-/* AUTH CHECK */
+/* LOGIN STATE */
 
 auth.onAuthStateChanged(user=>{
-currentUser = user;
+currentUser=user;
 });
 
-/* LOAD PRODUCTS */
+/* LOAD PRODUCTS FROM FIRESTORE */
 
 db.collection("products").onSnapshot(snapshot=>{
 
@@ -200,16 +183,12 @@ html+=`
 
 <div class="price">₹${p.price}</div>
 
-<div id="btn-${doc.id}">
-
 <button class="add"
-onclick="addCart('${p.name}',${p.price},'${doc.id}')">
+onclick="addCart('${p.name}',${p.price})">
 
 Add To Cart
 
 </button>
-
-</div>
 
 </div>
 
@@ -221,9 +200,9 @@ document.getElementById("products").innerHTML=html;
 
 });
 
-/* ADD CART */
+/* ADD TO CART */
 
-function addCart(name,price,id){
+function addCart(name,price){
 
 if(!currentUser){
 
@@ -239,85 +218,18 @@ let cart=JSON.parse(localStorage.getItem(key))||[];
 let item=cart.find(p=>p.name===name);
 
 if(item){
-
 item.qty++;
-
 }else{
-
 cart.push({
 name:name,
 price:price,
 qty:1
 });
-
 }
 
 localStorage.setItem(key,JSON.stringify(cart));
 
-showQty(name,price,id);
-
-}
-
-/* SHOW QTY */
-
-function showQty(name,price,id){
-
-let key="cart_"+currentUser.email;
-
-let cart=JSON.parse(localStorage.getItem(key))||[];
-
-let item=cart.find(p=>p.name===name);
-
-document.getElementById("btn-"+id).innerHTML=`
-
-<div class="qty">
-
-<button onclick="changeQty('${name}',${price},${item.qty-1},'${id}')">-</button>
-
-<span>${item.qty}</span>
-
-<button onclick="changeQty('${name}',${price},${item.qty+1},'${id}')">+</button>
-
-</div>
-
-`;
-
-}
-
-/* CHANGE QTY */
-
-function changeQty(name,price,newQty,id){
-
-let key="cart_"+currentUser.email;
-
-let cart=JSON.parse(localStorage.getItem(key))||[];
-
-let item=cart.find(p=>p.name===name);
-
-item.qty=newQty;
-
-if(item.qty<1){
-
-cart=cart.filter(p=>p.name!=name);
-
-document.getElementById("btn-"+id).innerHTML=`
-
-<button class="add"
-onclick="addCart('${name}',${price},'${id}')">
-
-Add To Cart
-
-</button>
-
-`;
-
-}else{
-
-showQty(name,price,id);
-
-}
-
-localStorage.setItem(key,JSON.stringify(cart));
+alert("Added to cart");
 
 }
 
