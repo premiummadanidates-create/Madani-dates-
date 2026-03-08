@@ -63,6 +63,7 @@ background:white;
 border-radius:18px;
 padding:18px;
 box-shadow:0 10px 25px rgba(0,0,0,0.08);
+position:relative;
 }
 
 .card img{
@@ -86,12 +87,13 @@ font-size:14px;
 
 .discount{
 position:absolute;
+top:10px;
+left:10px;
 background:red;
 color:white;
 font-size:12px;
 padding:5px 10px;
 border-radius:20px;
-margin-top:-10px;
 }
 
 .add{
@@ -185,29 +187,54 @@ const auth=firebase.auth()
 const db=firebase.firestore()
 
 let currentUser=null
+let cart=[]
 
 auth.onAuthStateChanged(user=>{
+
 currentUser=user
+
+if(user){
+
+let key="cart_"+user.email
+cart=JSON.parse(localStorage.getItem(key))||[]
+
+}else{
+
+cart=[]
+
+}
+
+updateCart()
+
 })
 
-let cart=JSON.parse(localStorage.getItem("cart"))||[]
-
 function saveCart(){
-localStorage.setItem("cart",JSON.stringify(cart))
+
+if(!currentUser) return
+
+let key="cart_"+currentUser.email
+localStorage.setItem(key,JSON.stringify(cart))
+
 updateCart()
+
 }
 
 function updateCart(){
+
 let count=0
 cart.forEach(i=>count+=i.qty)
+
 document.getElementById("cartCount").innerText=count
+
 }
 
 function addCart(name,price,id){
 
 if(!currentUser){
+
 window.location="login.html"
 return
+
 }
 
 let item=cart.find(p=>p.name===name)
@@ -219,6 +246,7 @@ cart.push({name:name,price:price,qty:1})
 }
 
 saveCart()
+
 showQty(name,price,id)
 
 }
@@ -226,6 +254,8 @@ showQty(name,price,id)
 function showQty(name,price,id){
 
 let item=cart.find(p=>p.name===name)
+
+if(!item) return
 
 document.getElementById("btn-"+id).innerHTML=`
 
@@ -247,6 +277,8 @@ function changeQty(name,price,newQty,id){
 
 let item=cart.find(p=>p.name===name)
 
+if(!item) return
+
 item.qty=newQty
 
 if(item.qty<1){
@@ -257,9 +289,7 @@ document.getElementById("btn-"+id).innerHTML=`
 
 <button class="add"
 onclick="addCart('${name}',${price},'${id}')">
-
 Add To Cart
-
 </button>
 
 `
@@ -275,7 +305,9 @@ saveCart()
 }
 
 function logout(){
+
 auth.signOut()
+
 }
 
 db.collection("products").onSnapshot(snapshot=>{
@@ -304,9 +336,7 @@ html+=`
 
 <button class="add"
 onclick="addCart('${p.name}',${p.price},'${doc.id}')">
-
 Add To Cart
-
 </button>
 
 </div>
@@ -320,8 +350,6 @@ Add To Cart
 document.getElementById("products").innerHTML=html
 
 })
-
-updateCart()
 
 </script>
 
