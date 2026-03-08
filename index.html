@@ -143,9 +143,7 @@ cursor:pointer;
 <div class="logo">Madani Dates</div>
 
 <div class="menu">
-
 <a href="orders.html">My Orders</a>
-
 </div>
 
 </header>
@@ -160,11 +158,9 @@ cursor:pointer;
 <div class="products" id="products"></div>
 
 <a href="cart.html">
-
 <div class="cart-float">
 Go To Cart
 </div>
-
 </a>
 
 <script>
@@ -174,11 +170,26 @@ const db=firebase.firestore()
 
 let currentUser=null
 
+/* LOGIN CHECK */
+
 auth.onAuthStateChanged(user=>{
+
+if(!user){
+
+window.location="login.html"
+return
+
+}
+
 currentUser=user
+
+loadProducts()
+
 })
 
 /* LOAD PRODUCTS */
+
+function loadProducts(){
 
 db.collection("products").onSnapshot(snapshot=>{
 
@@ -219,16 +230,11 @@ document.getElementById("products").innerHTML=html
 
 })
 
+}
+
 /* ADD CART */
 
 function addCart(name,price,id){
-
-if(!currentUser){
-
-window.location="login.html"
-return
-
-}
 
 let key="cart_"+currentUser.email
 
