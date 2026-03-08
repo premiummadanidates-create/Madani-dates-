@@ -1,61 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-<meta charset="UTF-8">
-<title>Login - Madani Dates</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-
-<script src="firebase.js"></script>
+<title>Login</title>
 
 <style>
 
 body{
-margin:0;
+font-family:Arial;
+background:#111;
+display:flex;
+justify-content:center;
+align-items:center;
 height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-font-family:Segoe UI;
-background:linear-gradient(135deg,#0f9d58,#06341a);
-}
-
-.box{
-background:white;
-padding:40px;
-border-radius:25px;
-width:320px;
-text-align:center;
-box-shadow:0 20px 40px rgba(0,0,0,0.2);
-}
-
-.logo{
-width:70px;
-height:70px;
-border-radius:50%;
-background:#0f9d58;
-margin:auto;
-margin-bottom:20px;
-display:flex;
-align-items:center;
-justify-content:center;
-color:white;
-font-size:26px;
-font-weight:bold;
 }
 
 button{
-width:100%;
-padding:14px;
+padding:15px 30px;
+font-size:18px;
 border:none;
-border-radius:30px;
-background:black;
+border-radius:8px;
+background:#4285F4;
 color:white;
 cursor:pointer;
-font-size:15px;
 }
 
 </style>
@@ -64,53 +30,29 @@ font-size:15px;
 
 <body>
 
-<div class="box">
+<button onclick="googleLogin()">Login with Google</button>
 
-<div class="logo">MD</div>
+<script type="module">
 
-<h2>Madani Dates</h2>
+import { auth, provider } from "./firebase.js";
+import { signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-<button onclick="login()">Sign in with Google</button>
+window.googleLogin = function(){
 
-</div>
+signInWithPopup(auth, provider)
 
-<script>
+.then((result)=>{
 
-const auth = firebase.auth();
+// login success
+window.location.href="index.html";
 
-/* LOGIN FUNCTION */
+})
 
-function login(){
-
-const provider = new firebase.auth.GoogleAuthProvider();
-
-auth.signInWithRedirect(provider);
-
-}
-
-/* REDIRECT RESULT */
-
-auth.getRedirectResult().then(result=>{
-
-if(result.user){
-
-window.location.replace("index.html");
-
-}
-
+.catch((error)=>{
+alert(error.message);
 });
 
-/* IF ALREADY LOGGED IN */
-
-auth.onAuthStateChanged(user=>{
-
-if(user){
-
-window.location.replace("index.html");
-
 }
-
-});
 
 </script>
 
