@@ -37,6 +37,13 @@ font-weight:600;
 color:#0f9d58;
 }
 
+.menu a{
+margin-left:18px;
+text-decoration:none;
+color:#333;
+font-weight:600;
+}
+
 /* HERO */
 
 .hero{
@@ -44,6 +51,8 @@ padding:80px 20px;
 background:linear-gradient(135deg,#0f9d58,#0b5c2e);
 color:white;
 text-align:center;
+border-bottom-left-radius:60px;
+border-bottom-right-radius:60px;
 }
 
 /* PRODUCTS */
@@ -75,6 +84,8 @@ font-size:18px;
 font-weight:700;
 }
 
+/* ADD BUTTON */
+
 .add{
 background:black;
 color:white;
@@ -86,6 +97,29 @@ margin-top:12px;
 cursor:pointer;
 }
 
+/* QTY */
+
+.qty{
+display:flex;
+justify-content:center;
+align-items:center;
+gap:10px;
+margin-top:10px;
+}
+
+.qty button{
+width:32px;
+height:32px;
+border:none;
+border-radius:50%;
+background:#0f9d58;
+color:white;
+cursor:pointer;
+font-size:18px;
+}
+
+/* CART BUTTON */
+
 .cart-float{
 position:fixed;
 bottom:25px;
@@ -95,6 +129,8 @@ color:white;
 padding:15px 22px;
 border-radius:30px;
 font-weight:600;
+box-shadow:0 8px 25px rgba(0,0,0,0.25);
+cursor:pointer;
 }
 
 </style>
@@ -106,7 +142,11 @@ font-weight:600;
 
 <div class="logo">Madani Dates</div>
 
+<div class="menu">
+
 <a href="orders.html">My Orders</a>
+
+</div>
 
 </header>
 
@@ -132,6 +172,14 @@ Go To Cart
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+let currentUser = null;
+
+/* AUTH CHECK */
+
+auth.onAuthStateChanged(user=>{
+currentUser = user;
+});
+
 /* LOAD PRODUCTS */
 
 db.collection("products").onSnapshot(snapshot=>{
@@ -152,12 +200,16 @@ html+=`
 
 <div class="price">₹${p.price}</div>
 
+<div id="btn-${doc.id}">
+
 <button class="add"
-onclick="addCart('${p.name}',${p.price})">
+onclick="addCart('${p.name}',${p.price},'${doc.id}')">
 
 Add To Cart
 
 </button>
+
+</div>
 
 </div>
 
@@ -169,25 +221,18 @@ document.getElementById("products").innerHTML=html;
 
 });
 
-
 /* ADD CART */
 
-function addCart(name,price){
+function addCart(name,price,id){
 
-const user = auth.currentUser;
-
-/* LOGIN CHECK */
-
-if(!user){
+if(!currentUser){
 
 window.location="login.html";
 return;
 
 }
 
-/* USER CART */
-
-let key="cart_"+user.email;
+let key="cart_"+currentUser.email;
 
 let cart=JSON.parse(localStorage.getItem(key))||[];
 
@@ -209,7 +254,70 @@ qty:1
 
 localStorage.setItem(key,JSON.stringify(cart));
 
-alert("Added to cart");
+showQty(name,price,id);
+
+}
+
+/* SHOW QTY */
+
+function showQty(name,price,id){
+
+let key="cart_"+currentUser.email;
+
+let cart=JSON.parse(localStorage.getItem(key))||[];
+
+let item=cart.find(p=>p.name===name);
+
+document.getElementById("btn-"+id).innerHTML=`
+
+<div class="qty">
+
+<button onclick="changeQty('${name}',${price},${item.qty-1},'${id}')">-</button>
+
+<span>${item.qty}</span>
+
+<button onclick="changeQty('${name}',${price},${item.qty+1},'${id}')">+</button>
+
+</div>
+
+`;
+
+}
+
+/* CHANGE QTY */
+
+function changeQty(name,price,newQty,id){
+
+let key="cart_"+currentUser.email;
+
+let cart=JSON.parse(localStorage.getItem(key))||[];
+
+let item=cart.find(p=>p.name===name);
+
+item.qty=newQty;
+
+if(item.qty<1){
+
+cart=cart.filter(p=>p.name!=name);
+
+document.getElementById("btn-"+id).innerHTML=`
+
+<button class="add"
+onclick="addCart('${name}',${price},'${id}')">
+
+Add To Cart
+
+</button>
+
+`;
+
+}else{
+
+showQty(name,price,id);
+
+}
+
+localStorage.setItem(key,JSON.stringify(cart));
 
 }
 
