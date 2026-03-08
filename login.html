@@ -6,7 +6,7 @@
 <style>
 
 body{
-font-family:Arial;
+font-family: Arial;
 background:#111;
 display:flex;
 justify-content:center;
@@ -25,26 +25,27 @@ cursor:pointer;
 }
 
 </style>
-
 </head>
 
 <body>
 
-<button onclick="googleLogin()">Login with Google</button>
+<button id="googleLogin">Login with Google</button>
 
 <script type="module">
 
 import { auth, provider } from "./firebase.js";
 import { signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-window.googleLogin = function(){
+const btn = document.getElementById("googleLogin");
+
+btn.addEventListener("click", () => {
 
 signInWithPopup(auth, provider)
 
 .then((result)=>{
 
 // login success
-window.location.href="index.html";
+window.location.href = "index.html";
 
 })
 
@@ -52,7 +53,7 @@ window.location.href="index.html";
 alert(error.message);
 });
 
-}
+});
 
 </script>
 
