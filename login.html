@@ -27,17 +27,21 @@ font-family:'Segoe UI',sans-serif;
 background:linear-gradient(135deg,#0f9d58,#06341a);
 }
 
+/* LOGIN CARD */
+
 .login-box{
 background:white;
 padding:45px 35px;
-border-radius:30px;
+border-radius:28px;
 width:340px;
 text-align:center;
 box-shadow:0 25px 60px rgba(0,0,0,0.25);
 animation:fadeIn .6s ease;
 }
 
-.logo-circle{
+/* LOGO */
+
+.logo{
 width:75px;
 height:75px;
 border-radius:50%;
@@ -52,28 +56,33 @@ font-size:28px;
 font-weight:bold;
 }
 
+/* TEXT */
+
 .login-box h2{
-margin:0 0 8px;
+margin:0;
 color:#0f9d58;
+margin-bottom:8px;
 }
 
 .login-box p{
-font-size:14px;
 opacity:0.7;
+font-size:14px;
 margin-bottom:25px;
 }
 
+/* BUTTON */
+
 .google-btn{
 display:flex;
-align-items:center;
 justify-content:center;
+align-items:center;
 gap:10px;
+width:100%;
+padding:14px;
+border:none;
+border-radius:35px;
 background:black;
 color:white;
-border:none;
-padding:14px;
-width:100%;
-border-radius:35px;
 cursor:pointer;
 font-size:15px;
 transition:0.25s;
@@ -81,28 +90,49 @@ transition:0.25s;
 
 .google-btn:hover{
 background:#0f9d58;
+transform:scale(1.04);
 }
 
 .loading{
 display:none;
-margin-top:15px;
+margin-top:12px;
 color:#0f9d58;
 font-size:14px;
 }
 
+/* ANIMATION */
+
 @keyframes fadeIn{
-from{opacity:0;transform:translateY(20px);}
-to{opacity:1;transform:translateY(0);}
+from{
+opacity:0;
+transform:translateY(20px);
+}
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+/* MOBILE */
+
+@media(max-width:500px){
+
+.login-box{
+width:90%;
+padding:35px 25px;
+}
+
 }
 
 </style>
 
 </head>
+
 <body>
 
 <div class="login-box">
 
-<div class="logo-circle">MD</div>
+<div class="logo">MD</div>
 
 <h2>Madani Dates</h2>
 
@@ -127,7 +157,9 @@ const auth = firebase.auth();
 auth.onAuthStateChanged(user=>{
 
 if(user){
+
 window.location.href="index.html";
+
 }
 
 });
@@ -140,7 +172,7 @@ document.getElementById("loading").style.display="block";
 
 const provider = new firebase.auth.GoogleAuthProvider();
 
-/* MOBILE FRIENDLY LOGIN */
+/* MOBILE + DESKTOP LOGIN */
 
 auth.signInWithRedirect(provider);
 
@@ -149,13 +181,21 @@ auth.signInWithRedirect(provider);
 /* AFTER REDIRECT */
 
 auth.getRedirectResult()
+
 .then(result=>{
+
 if(result.user){
+
 window.location.href="index.html";
+
 }
+
 })
+
 .catch(err=>{
+
 console.log(err);
+
 });
 
 </script>
