@@ -143,7 +143,9 @@ cursor:pointer;
 <div class="logo">Madani Dates</div>
 
 <div class="menu">
+
 <a href="orders.html">My Orders</a>
+
 </div>
 
 </header>
@@ -158,46 +160,35 @@ cursor:pointer;
 <div class="products" id="products"></div>
 
 <a href="cart.html">
+
 <div class="cart-float">
 Go To Cart
 </div>
+
 </a>
 
 <script>
 
-const auth=firebase.auth()
-const db=firebase.firestore()
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-let currentUser=null
+let currentUser = null;
 
-/* LOGIN CHECK */
+/* AUTH CHECK */
 
 auth.onAuthStateChanged(user=>{
-
-if(!user){
-
-window.location="login.html"
-return
-
-}
-
-currentUser=user
-
-loadProducts()
-
-})
+currentUser = user;
+});
 
 /* LOAD PRODUCTS */
 
-function loadProducts(){
-
 db.collection("products").onSnapshot(snapshot=>{
 
-let html=""
+let html="";
 
 snapshot.forEach(doc=>{
 
-let p=doc.data()
+let p=doc.data();
 
 html+=`
 
@@ -222,29 +213,34 @@ Add To Cart
 
 </div>
 
-`
+`;
 
-})
+});
 
-document.getElementById("products").innerHTML=html
+document.getElementById("products").innerHTML=html;
 
-})
-
-}
+});
 
 /* ADD CART */
 
 function addCart(name,price,id){
 
-let key="cart_"+currentUser.email
+if(!currentUser){
 
-let cart=JSON.parse(localStorage.getItem(key))||[]
+window.location="login.html";
+return;
 
-let item=cart.find(p=>p.name===name)
+}
+
+let key="cart_"+currentUser.email;
+
+let cart=JSON.parse(localStorage.getItem(key))||[];
+
+let item=cart.find(p=>p.name===name);
 
 if(item){
 
-item.qty++
+item.qty++;
 
 }else{
 
@@ -252,13 +248,13 @@ cart.push({
 name:name,
 price:price,
 qty:1
-})
+});
 
 }
 
-localStorage.setItem(key,JSON.stringify(cart))
+localStorage.setItem(key,JSON.stringify(cart));
 
-showQty(name,price,id)
+showQty(name,price,id);
 
 }
 
@@ -266,11 +262,11 @@ showQty(name,price,id)
 
 function showQty(name,price,id){
 
-let key="cart_"+currentUser.email
+let key="cart_"+currentUser.email;
 
-let cart=JSON.parse(localStorage.getItem(key))||[]
+let cart=JSON.parse(localStorage.getItem(key))||[];
 
-let item=cart.find(p=>p.name===name)
+let item=cart.find(p=>p.name===name);
 
 document.getElementById("btn-"+id).innerHTML=`
 
@@ -284,7 +280,7 @@ document.getElementById("btn-"+id).innerHTML=`
 
 </div>
 
-`
+`;
 
 }
 
@@ -292,34 +288,36 @@ document.getElementById("btn-"+id).innerHTML=`
 
 function changeQty(name,price,newQty,id){
 
-let key="cart_"+currentUser.email
+let key="cart_"+currentUser.email;
 
-let cart=JSON.parse(localStorage.getItem(key))||[]
+let cart=JSON.parse(localStorage.getItem(key))||[];
 
-let item=cart.find(p=>p.name===name)
+let item=cart.find(p=>p.name===name);
 
-item.qty=newQty
+item.qty=newQty;
 
 if(item.qty<1){
 
-cart=cart.filter(p=>p.name!=name)
+cart=cart.filter(p=>p.name!=name);
 
 document.getElementById("btn-"+id).innerHTML=`
 
 <button class="add"
 onclick="addCart('${name}',${price},'${id}')">
+
 Add To Cart
+
 </button>
 
-`
+`;
 
 }else{
 
-showQty(name,price,id)
+showQty(name,price,id);
 
 }
 
-localStorage.setItem(key,JSON.stringify(cart))
+localStorage.setItem(key,JSON.stringify(cart));
 
 }
 
